@@ -71,7 +71,7 @@ playd_help() {	#{{{1
 	cat << EOF
 $PLAYD_NAME (playd.sh) v$PLAYD_VERSION
 by Aldis Berjoza <aldis@bsdroot.lv>
-http://git.bsdroot.lv/playd.sh
+http://aldis.git.bsdroot.lv/playd.sh
 
 $PLAYD_NAME is script to control mplayer in slave mode
 
