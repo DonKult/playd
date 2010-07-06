@@ -1,0 +1,215 @@
+.\" Copyright (c) 2010, Aldis Berjoza <aldis@bsdroot.lv>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions are
+.\" met:
+.\"
+.\" * Redistributions of source code must retain the above copyright
+.\"   notice, this list of conditions and the following disclaimer.
+.\" * Redistributions in binary form must reproduce the above
+.\"   copyright notice, this list of conditions and the following disclaimer
+.\"   in the documentation and/or other materials provided with the
+.\"   distribution.
+.\" * Neither the name of the  nor the names of its
+.\"   contributors may be used to endorse or promote products derived from
+.\"   this software without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+.\" "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+.\" LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+.\" A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+.\" OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+.\" SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+.\" LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+.\" DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+.\" THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+.\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+.\" OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.TH playd.sh "July 30, 2010" "playd.sh v1.7.10+" "playd.sh manual"
+.SH NAME
+\fBplayd\fP - simple to use mplayer sh wrapper script
+.SH SYNOPSIS
+\fBplayd\fP [ \fB--append\fP ] [ \fIoptions\fP ] [ \fIfiles\fP | \fIdirectories\fP | \fIstream\fP ] ...
+.SH DESCRIPTION
+Playd is simple mplayer sh wrapper script.
+With playd you don't need mplayer gui, to listen to music, watch wideos, stream video/audio.
+Playd stores its playlist is simple plain text files, containing file names with absolute path.
+Playd automatically creates playlist if necessary.
+It is easy to integrate playd in various window managers (i.e. fvwm2, fluxbox), scripts etc.
+
+Playd is designed K.I.S.S.
+Goal is to be small, fast and very easy to use.
+The goal is not to be as foolproof as possible.
+.SH OPTIONS
+Options can be mixed almost in any order.
+There's only one limit: \fB--append\fP must be 1st argument, if specified.
+.SS --append
+Append items to default playlist.
+Must be first argument on command line if used.
+.SS --audio-delay \fIvalue\fP [ --absolute ]
+Adjust audio delay in seconds (relative by default).
+If \fB--absolute\fP is set, then audio delay will be set exactly to value in seconds.
+.SS --cd [ \fItrack\fP ]
+Play audio CD.
+(Can't append to playlist)
+.SS --cmd "\fImplayer command\fP"
+Send command to mplayer slave directly.
+If command contains spaces, it should be quoted.
+For mplayer slave commands see
+
+http://www.mplayerhq.hu/DOCS/tech/slave.txt
+.SS --brightness \fIvalue\fP [ --absolute ]
+Adjust brightness by value (relative by default).
+If \fB--absolute\fP key is specified, brightness will be set to absolute value.
+Value can be in range -100 to 100.
+.SS --contrast \fIvalue\fP [ --absolute ]
+Adjust contrast by value (relative by default).
+If \fB--absolute\fP key is specified, contrast will be set to absolute value.
+Value can be in range -100 to 100.
+.SS --dvd [ \fItrack\fP ]
+Play video DVD.
+(Can't append to playlist)
+.SS --file [ \fIfile\fP | \fIdirectory\fP ]
+Play file or directory.
+This option is handy if you have file name that match playd command
+.SS --gamma \fIvalue\fP [ --absolute ]
+Adjust gamma by value (relative by default).
+If \fB--absolute\fP key is specified, gamma will be set to absolute value.
+Value can be in range -100 to 100.
+.SS --hue \fIvalue\fP [ --absolute ]
+Adjust hue by value (relative by default).
+If \fB--absolute\fP key is specified, hue will be set to absolute value.
+Value can be in range -100 to 100.
+.SS --list
+Show default playlist.
+.SS --longlist
+Show default playlist. Each item is displayed with full path.
+.SS --mute
+Mute mplayer slave.
+.SS --next
+Play next playlist item.
+.SS --nocheck \fIfile\fP
+There are some files that are reported as application/octet-stream.
+These can be various types, even text files.
+If you can't load some files, you can try to use this option.
+It won't check for file type and extension.
+This can be very useful for disk images.
+Note, that you need to set \fB--nocheck\fP for every file you want playd to skip filetype checks.
+.SS --pause
+Pause mplayer slave.
+.SS --play \fIitem1\fP [\fIitem2\fP] ...
+Play items from default playlist.
+.SS --playlist
+Play default playlist.
+Mplayer slave will be automatically started if necessary.
+.SS --randomize
+This will randomize playlist, but won't start playing it... you'll need to run \fBplayd --playlist\fP to load new playlist.
+.SS --restart [ --console ] [ --nofork ]
+Sometimes playd doesn't listen to your commands.
+Actually playd does listen, while mplayer doesn't.
+So if you don't get expected behavior from playd, please run \fBplayd --restart\fP and check if everything works.
+Only send bug report if same problem appears after restart.
+If \fB--console\fP is set, mplayer will only output sound.
+If \fB--fork\fP is set, mplayer playd will show mplayer output to current terminal.
+.SS --rmlist
+Remove default playlist.
+.SS --seek \fIvalue\fP [ --absolute | --precent ]
+Seek current file to value.
+If \fB--absolute\fP is specified, seek to absolute value in seconds.
+If \fB--precent\fP is specified, seek to value percent.
+By default mplayer slave will seak relative in seconds.
+.SS --sarution \fIvalue\fP [ --absolute ]
+Adjust sarution by value (relative by default).
+If \fB--absolute\fP key is specified, sarution will be set to absolute value.
+Value can be in range -100 to 100.
+.SS --start [ --console ] [ --nofork ]
+Start mplayer slave.
+You won't probably need to use this, because mplayer slave is started automatically when needed.
+If \fB--console\fP is set, mplayer will only output sound.
+If \fB--fork\fP is set, mplayer playd will show mplayer output to current terminal.
+.SS --status
+Check if mplayer is started in slave mode.
+.SS --subtitles \fIfile\fP
+Load subtitles.
+This option doesn't check for filetype.
+.SS --stop
+Stop mplayer slave.
+.SS --switch-audio
+Cycle through the available audio tracks. (for DVD)
+.SS --switch-subtitle
+Cycle through the available subtitle tracks. (for DVD)
+.SS --volume \fIvalue\fP [ --absolute ]
+Adjust volume by value (relative by default).
+If \fB--absolute\fP key is specified, volume will be set to absolute value.
+Value can be 0 - 100
+
+NOTE: on FreeBSD mplayer will reset volume after you seek in file.
+To avoid this use mixer(8) to set volume
+.SS \fIfile\fP | \fIdirectory\fP | \fIstream\fP
+play file, directory or stream.
+Mplayer will be automatically started in slave mode, if necessary.
+.SH "COMMAND ALIASES"
+Every command that starts with \fB--\fP, has alias witout it (they aren't mentioned here)
+
+ \--absolute                             abs
+ \--append             -a
+ \--cd                 -c                cdda
+ \--dvd                -d
+ \--file               -f
+ \--help               -h
+ \--list               -l
+ \--longlist           -L   --llist
+ \--mute               -m
+ \--next               -n
+ \--pause              -z
+ \--percent                              %
+ \--play               -p
+ \--playlist           -P
+ \--randomize               --rnd 
+ \--restart            -R
+ \--seek               -s
+ \--stop               -q
+ \--subtitles          -S   --subs
+ \--switch-audio            --sw-audio
+ \--switch-subtitles        --sw-subs
+ \--volume             -v   --vol
+.SH ENVIRONMENT
+Set PLAYD_MPLAYER_USER_OPTIONS, to add custom command line options passed to mplayer, when it's started.
+
+Set PLAYD_HOME, if you want to change playd home directory.
+By default it will use ~/.mplayer
+.SH EXAMPLES
+playd /my/mysic
+
+playd --append /mysic/1.mp3 /music/3.mp3
+
+playd play 1 3 5
+
+playd http://yp.shoutcast.com/sbin/tunein-station.pls?id=656847
+
+playd stop
+.SH Supported media file formats:
+Basically everything supported by mplayer should be supoprted by playd.
+But since I had to figure out file extensions myself if some extensions are missing,
+please post a bug report
+.SH Supported playlists
+As of V1.7.10 playd has basic support for fallowind playlist file formats:
+
+pls, m3u, m3u8, asx, xspf, ram, plst, qtl, wax, wpl
+
+NOTE: plst is simple file, with filenames/links (one per line). Somethimes when you want to create somple playlist for 
+internet steams for example, it is very handy to put urls in plst. Very simple and fast :)
+.SH HOMEPAGE
+http://aldis.git.bsdroot.lv/playd
+.SH SEE ALSO
+mplayer(1)
+sh(1)
+.SH AUTHORS
+Aldis Berjoza <aldis@bsdroot.lv>
+.SH BUGS
+Seams \fB--play\fP doesn't work well (if at all) after using \fB--next\fP or \fB--seek\fP.
+I think it's mplayer bug (still testing if it's playd bug).
+After restarting playd, everything seams work as expected.
+
+Read \fB--restart\fP
