@@ -33,7 +33,7 @@
 
 # 1}}}
 
-readonly PLAYD_VERSION='1.7.12'
+readonly PLAYD_VERSION='1.7.13'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -74,13 +74,46 @@ $PLAYD_NAME (playd.sh) v$PLAYD_VERSION
 by Aldis Berjoza <aldis@bsdroot.lv>
 http://aldis.git.bsdroot.lv/playd.sh
 
-$PLAYD_NAME is script to control mplayer in slave mode
-
 Special thanks to:
- * DutchDaemon
- * blah
- * john_doe
+  * DutchDaemon
+  * blah
+  * john_doe
 from forums.freebsd.org for few lines of sh
+
+
+COMMANDS (long names):
+--append
+--audio-delay value [ --absolute ]
+--cd [ track ]
+--cmd 'mplayer command'
+--brightness value [ --absolute 
+--contrast value [ --absolute ]
+--dvd [ track ]
+--file [ file | directory ]
+--gamma value [ --absolute ]
+--hue value [ --absolute ]
+--list
+--longlist
+--mute
+--next
+--nocheck file
+--pause
+--play item1 [item2] ...
+--playlist
+--randomize
+--restart [ --console ] [ --nofork ]
+--rmlist
+--seek value [ --absolute | --precent ]
+--sarution value [ --absolute ]
+--start [ --console ] [ --nofork ]
+--status
+--subtitles file
+--stop
+--switch-audio
+--switch-subtitle
+--volume value [ --absolute ]
+
+see playd(1) for more info
 EOF
 }	#1}}}
 
