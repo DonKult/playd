@@ -33,7 +33,7 @@
 
 # 1}}}
 
-readonly PLAYD_VERSION='1.7.13'
+readonly PLAYD_VERSION='1.7.14'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -202,9 +202,9 @@ playd_mk_playlist() {	# {{{1
 	ls "$1" | while read fileName; do
 		if [ -f "$1/$fileName" ]; then
 			local fname="$1/$fileName"
-			echo "${fileName##*.}" | grep -i -E -e "^(${PLAYD_FILE_FORMATS})$" 2> /dev/null > /dev/null \
+			echo "${fileName##*.}" | grep -q -i -E -e "^(${PLAYD_FILE_FORMATS})$" \
 				&& echo "$fname" >> "$PLAYD_PLAYLIST.tmp" \
-				|| { file -ib "$fname" | grep -E -e '^(audio|video)' 2> /dev/null > /dev/null && echo "$fname" >> "$PLAYD_PLAYLIST.tmp"; }
+				|| { file -ib "$fname" | grep -q -E -e '^(audio|video)' && echo "$fname" >> "$PLAYD_PLAYLIST.tmp"; }
 		elif [ -d "$1/$fileName" ]; then
 			playd_mk_playlist "$1/$fileName"
 		else
@@ -518,10 +518,10 @@ while [ $# -gt 0 ]; do
 			fileName=$(playd_fullpath "$1")
 
 			if [ -f "$fileName" ]; then
-				echo "${1##*.}" | grep -i -E -e "^(${PLAYD_FILE_FORMATS})$" 2> /dev/null > /dev/null \
+				echo "${1##*.}" | grep -q -i -E -e "^(${PLAYD_FILE_FORMATS})$" \
 					&& playd_playlist_add "$fileName" \
-					|| { file -ib "$fileName" | grep -E -e '^(audio|video)' 2> /dev/null > /dev/null && playd_playlist_add "$fileName"; } \
-					|| { echo "${1##*.}" | grep -i -E -e "^($PLAYD_PLAYLIST_FORMATS)$" 2> /dev/null > /dev/null && playd_import "$fileName"; } \
+					|| { file -ib "$fileName" | grep -q -E -e '^(audio|video)' && playd_playlist_add "$fileName"; } \
+					|| { echo "${1##*.}" | grep -q -i -E -e "^($PLAYD_PLAYLIST_FORMATS)$" && playd_import "$fileName"; } \
 					|| playd_warn "\"$fileName\" doesn't seam to be valid file for playback. Ignoring" "to override use:" "  playd --nocheck $fileName"
 			elif [ -d "$fileName" ]; then
 				rm -f "$PLAYD_PLAYLIST.tmp"
