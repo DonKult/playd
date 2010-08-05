@@ -26,7 +26,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 .\" OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.TH playd.sh "July 30, 2010" "playd.sh v1.7.10+" "playd.sh manual"
+.TH playd.sh "August 5, 2010" "playd.sh v1.8.0+" "playd.sh manual"
 .SH NAME
 \fBplayd\fP - simple to use mplayer sh wrapper script
 .SH SYNOPSIS
@@ -155,28 +155,28 @@ Mplayer will be automatically started in slave mode, if necessary.
 .SH "COMMAND ALIASES"
 Every command that starts with \fB--\fP, has alias witout it (they aren't mentioned here)
 
- \--absolute                             abs
- \--append             -a
- \--cd                 -c                cdda
- \--dvd                -d
- \--file               -f
- \--help               -h
- \--list               -l
- \--longlist           -L   --llist
- \--mute               -m
- \--next               -n
- \--pause              -z
- \--percent                              %
- \--play               -p
- \--playlist           -P
- \--randomize               --rnd 
- \--restart            -R
- \--seek               -s
- \--stop               -q
- \--subtitles          -S   --subs
- \--switch-audio            --sw-audio
- \--switch-subtitles        --sw-subs
- \--volume             -v   --vol
+   \ --absolute			                  	abs
+   \ --append		      -a
+   \ --cd                 -c                cdda
+   \ --dvd                -d
+   \ --file               -f
+   \ --help               -h
+   \ --list               -l
+   \ --longlist           -L   --llist
+   \ --mute               -m
+   \ --next               -n
+   \ --pause              -z
+   \ --percent                              %
+   \ --play               -p
+   \ --playlist           -P
+   \ --randomize               --rnd 
+   \ --restart            -R
+   \ --seek               -s
+   \ --stop               -q
+   \ --subtitles          -S   --subs
+   \ --switch-audio            --sw-audio
+   \ --switch-subtitles        --sw-subs
+   \ --volume             -v   --vol
 .SH ENVIRONMENT
 Set PLAYD_MPLAYER_USER_OPTIONS, to add custom command line options passed to mplayer, when it's started.
 
@@ -204,7 +204,8 @@ pls, m3u, m3u8, asx, xspf, ram, plst, qtl, wax, wpl
 NOTE: plst is simple file, with filenames/links (one per line). Somethimes when you want to create somple playlist for 
 internet steams for example, it is very handy to put urls in plst. Very simple and fast :)
 .SH HOMEPAGE
-http://aldis.git.bsdroot.lv/playd
+   \ http://wiki.bsdroot.lv/playd
+   \ http://aldis.git.bsdroot.lv/playd.sh
 .SH SEE ALSO
 mplayer(1)
 sh(1)
@@ -216,3 +217,4 @@ I think it's mplayer bug (still testing if it's playd bug).
 After restarting playd, everything seams work as expected.
 
 Read \fB--restart\fP
+.\" vim: set ts=4 sw=4:

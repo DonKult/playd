@@ -72,6 +72,7 @@ playd_help() {	#{{{1
 	cat << EOF
 $PLAYD_NAME (playd.sh) v$PLAYD_VERSION
 by Aldis Berjoza <aldis@bsdroot.lv>
+http://wiki.bsdroot.lv/playd
 http://aldis.git.bsdroot.lv/playd.sh
 
 Special thanks to:
