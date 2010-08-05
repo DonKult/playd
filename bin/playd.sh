@@ -33,7 +33,7 @@
 
 # 1}}}
 
-readonly PLAYD_VERSION='1.7.14'
+readonly PLAYD_VERSION='1.8.0'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -339,6 +339,12 @@ playd_import() {	# {{{1
 	playd_append=1
 }	# 1}}}
 
+playd_time2s() { # {{{1
+	# convert human readable time to seconds
+	# arg1 time in human readable form (for example 2m30s)
+	echo "$1" | sed -e 's/y/*31536000+/' -e 's/M/*2592000+/' -e 's/w/*604800+/' -e 's/d/*86400+/' -e 's/h/*3600+/' -e 's/m/*60+/' -e 's/s//' -e 's/\+$//' | bc -l
+} # 1}}}
+
 # checking for mplayer
 [ "$(which mplayer)" ] || playd_die 'mplayer not found'
 
@@ -423,7 +429,7 @@ while [ $# -gt 0 ]; do
 		'seek' | '--seek' | '-s' )
 			if [ $2 ]; then
 				match=$(playd_match "$3" 0 2 'abs --absolute absolute' 1 '% --percent percent')
-				playd_put "seek $2 $match"
+				playd_put "seek `playd_time2s $2` $match"
 				[ $match -ne 0 ] && shift
 				shift
 			else
@@ -541,4 +547,4 @@ while [ $# -gt 0 ]; do
 done
 
 exit 0
-# vim:ts=4:sw=4:foldminlines=3
+# vim: set ts=4 sw=4 foldminlines=3 fdm=marker:
