@@ -32,7 +32,7 @@
 .SH SYNOPSIS
 \fBplayd\fP [ \fB--append\fP ] [ \fIoptions\fP ] [ \fIfiles\fP | \fIdirectories\fP | \fIstream\fP ] ...
 .SH DESCRIPTION
-Playd is simple mplayer sh wrapper script.
+Playd is a simple mplayer wrapper script wirtten in pure /bin/sh.
 With playd you don't need mplayer gui, to listen to music, watch wideos, stream video/audio.
 Playd stores its playlist is simple plain text files, containing file names with absolute path.
 Playd automatically creates playlist if necessary.
@@ -111,15 +111,15 @@ Actually playd does listen, while mplayer doesn't.
 So if you don't get expected behavior from playd, please run \fBplayd --restart\fP and check if everything works.
 Only send bug report if same problem appears after restart.
 If \fB--console\fP is set, mplayer will only output sound.
-If \fB--fork\fP is set, mplayer playd will show mplayer output to current terminal.
+If \fB--fork\fP is set, playd will show mplayer output to current terminal.
 .SS --rmlist
 Remove default playlist.
 .SS --seek \fIvalue\fP [ --absolute | --precent ]
 Seek current file to value.
 If \fB--absolute\fP is specified, seek to absolute value in seconds.
 If \fB--precent\fP is specified, seek to value percent.
-By default mplayer slave will seak relative in seconds.
-Yoy many use modifiers (multipliers) to enter value... such as \fBy\fP \fBM\fP \fBw\fP \fBd\fP \fBh\fP \fBm\fP \fBs\fP [years, Months, weeks, days, hours, minutes, seconds] (in order mentioned) 
+By default mplayer slave will seek relative in seconds.
+You many use modifiers (multipliers) to enter value... such as \fBy\fP \fBM\fP \fBw\fP \fBd\fP \fBh\fP \fBm\fP \fBs\fP [years, Months, weeks, days, hours, minutes, seconds] (in order mentioned) 
 
 For example: playd --seek -1m30s
 .SS --sarution \fIvalue\fP [ --absolute ]
@@ -130,7 +130,7 @@ Value can be in range -100 to 100.
 Start mplayer slave.
 You won't probably need to use this, because mplayer slave is started automatically when needed.
 If \fB--console\fP is set, mplayer will only output sound.
-If \fB--fork\fP is set, mplayer playd will show mplayer output to current terminal.
+If \fB--fork\fP is set, playd will show mplayer output to current terminal.
 .SS --status
 Check if mplayer is started in slave mode.
 .SS --subtitles \fIfile\fP
