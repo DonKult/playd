@@ -31,9 +31,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# project email: playd@bsdroot.lv
 # 1}}}
 
-readonly PLAYD_VERSION='1.8.0'
+readonly PLAYD_VERSION='1.8.1'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -71,9 +72,10 @@ playd_help() {	#{{{1
 	# print help
 	cat << EOF
 $PLAYD_NAME (playd.sh) v$PLAYD_VERSION
-by Aldis Berjoza <aldis@bsdroot.lv>
+by Aldis Berjoza
 http://wiki.bsdroot.lv/playd
 http://aldis.git.bsdroot.lv/playd.sh
+project e-mail: playd@bsdroot.lv
 
 Special thanks to:
   * DutchDaemon
