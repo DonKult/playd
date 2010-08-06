@@ -148,7 +148,7 @@ If \fB--absolute\fP key is specified, volume will be set to absolute value.
 Value can be 0 - 100
 
 NOTE: on FreeBSD mplayer will reset volume after you seek in file.
-To avoid this use mixer(8) to set volume
+To avoid this you should set \fBhw.snd.vpc_autoreset=0\fP in your \fI/etc/sysctl.conf\fP under FreeBSD
 .SS \fIfile\fP | \fIdirectory\fP | \fIstream\fP | \fIplaylist\fP
 play file, directory or stream.
 Mplayer will be automatically started in slave mode, if necessary.
