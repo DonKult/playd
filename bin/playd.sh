@@ -386,7 +386,7 @@ while [ $# -gt 0 ]; do
 
 		'list' | '--list' | '-l' )
 			[ -f "$PLAYD_PLAYLIST" ] \
-				&& sed -e "s#^.*/##" -E -e "s#\.($PLAYD_FILE_FORMATS)\$##" "$PLAYD_PLAYLIST" | awk '{ print NR "|\t" $0 }' | more \
+				&& sed -e 's#^.*/##' -e 's#_# #g' -E -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -E -e "s#\.($PLAYD_FILE_FORMATS)\$##" "$PLAYD_PLAYLIST" | awk '{ print NR "|\t" $0 }' | more \
 				|| playd_warn "Default playlist doesn't exist."
 		;;
 
