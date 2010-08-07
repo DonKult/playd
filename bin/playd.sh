@@ -34,7 +34,7 @@
 # project email: playd@bsdroot.lv
 # 1}}}
 
-readonly PLAYD_VERSION='1.8.1'
+readonly PLAYD_VERSION='1.8.2'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -387,7 +387,7 @@ while [ $# -gt 0 ]; do
 
 		'list' | '--list' | '-l' )
 			[ -f "$PLAYD_PLAYLIST" ] \
-				&& sed -e "s#^.*/##" -E -e "s#\.($PLAYD_FILE_FORMATS)\$##" "$PLAYD_PLAYLIST" | awk '{ print NR "|\t" $0 }' | more \
+				&& sed -e 's#^.*/##' -e 's#_# #g' -E -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -E -e "s#\.($PLAYD_FILE_FORMATS)\$##" "$PLAYD_PLAYLIST" | awk '{ print NR "|\t" $0 }' | more \
 				|| playd_warn "Default playlist doesn't exist."
 		;;
 
