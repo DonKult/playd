@@ -29,15 +29,19 @@
 .Dd August 7, 2010
 .Dt playd 1
 .Os
+.\"
+.\"
+.\"
 .Sh NAME
 .Nm playd
 .Nd Simple to use mplayer wrapper script written in sh
+.\"
+.\"
+.\"
 .Sh SYNOPSIS
 .Nm
-.\" TODO
-.Op Fl -test
-.Op Fl o Ar file
-.\"\fBplayd\fP [ \fB--append\fP ] [ \fIoptions\fP ] [ \fIfiles\fP | \fIdirectories\fP | \fIstream\fP ] ...
+.Op Cm --append
+.Op Ar commands | files | directories | streans
 .Sh DESCRIPTION
 .Nm
 is a simple mplayer wrapper script wirtten in pure /bin/sh.
@@ -57,117 +61,197 @@ is designed K.I.S.S.
 .Bl -tag
 .It Goal is to be small, fast and very easy to use.
 .It The goal is not to be as foolproof as possible.
+.El
+.\"
+.\"
+.\"
 .Sh COMMANDS
 Commands can be mixed almost in any order.
 There's only one limit: append must be 1st argument, if specified.
-.It Ic append Xo
-.Xc
+.\"
+.\"
+.Bl -tag -width indent
+.\"
+.\"
+.It Cm --append
 Append items to default playlist.
 Must be first argument on command line if used.
-.It --audio-delay \fIvalue\fP [ --absolute ]
+.\"
+.\"
+.It Cm --audio-delay Xo
+.Ar value
+.Op Cm --absolute
+.Xc
 Adjust audio delay in seconds (relative by default).
-If \fB--absolute\fP is set, then audio delay will be set exactly to value in seconds.
-.It --cd [ \fItrack\fP ]
+If Cm --absolute is set, then audio delay will be set exactly to value in seconds.
+.\"
+.\"
+.It Cm --cd Xo
+.Op track
+.Xc
 Play audio CD.
 (Can't append to playlist)
-.It --cmd '\fImplayer command\fP'
+.\"
+.\"
+.It Cm --cmd Xo
+.Ar mplayer command
+.Xc
 Send command to mplayer slave directly.
 If command contains spaces, it should be quoted.
-
+.Pp
 .Lk http://www.mplayerhq.hu/DOCS/tech/slave.txt "Mplayer slave mode protocol"
-.It --brightness \fIvalue\fP [ --absolute ]
+.\"
+.\"
+.It Cm --brightness \fIvalue\fP [ --absolute ]
 Adjust brightness by value (relative by default).
 If \fB--absolute\fP key is specified, brightness will be set to absolute value.
 Value can be in range -100 to 100.
-.It --contrast \fIvalue\fP [ --absolute ]
+.\"
+.\"
+.It Cm --contrast \fIvalue\fP [ --absolute ]
 Adjust contrast by value (relative by default).
 If \fB--absolute\fP key is specified, contrast will be set to absolute value.
 Value can be in range -100 to 100.
-.It --dvd [ \fItrack\fP ]
+.\"
+.\"
+.It Cm --dvd [ \fItrack\fP ]
 Play video DVD.
 (Can't append to playlist)
-.It --file [ \fIfile\fP | \fIdirectory\fP ]
+.\"
+.\"
+.It Cm --file [ \fIfile\fP | \fIdirectory\fP ]
 Play file or directory.
 This option is handy if you have file name that match playd command
-.It --gamma \fIvalue\fP [ --absolute ]
+.\"
+.\"
+.It Cm --gamma \fIvalue\fP [ --absolute ]
 Adjust gamma by value (relative by default).
 If \fB--absolute\fP key is specified, gamma will be set to absolute value.
 Value can be in range -100 to 100.
-.It --hue \fIvalue\fP [ --absolute ]
+.\"
+.\"
+.It Cm --hue \fIvalue\fP [ --absolute ]
 Adjust hue by value (relative by default).
 If \fB--absolute\fP key is specified, hue will be set to absolute value.
 Value can be in range -100 to 100.
-.It --list
+.\"
+.\"
+.It Cm --list
 Show default playlist.
-.It --longlist
+.\"
+.\"
+.It Cm --longlist
 Show default playlist. Each item is displayed with full path.
-.It --mute
+.\"
+.\"
+.It Cm --mute
 Mute mplayer slave.
-.It --next
+.\"
+.\"
+.It Cm --next
 Play next playlist item.
-.It --nocheck \fIfile\fP
+.\"
+.\"
+.It Cm --nocheck \fIfile\fP
 There are some files that are reported as application/octet-stream.
 These can be various types, even text files.
 If you can't load some files, you can try to use this option.
 It won't check for file type and extension.
 This can be very useful for disk images.
 Note, that you need to set \fB--nocheck\fP for every file you want playd to skip filetype checks.
-.It --pause
+.\"
+.\"
+.It Cm --pause
 Pause mplayer slave.
-.It --play \fIitem1\fP [\fIitem2\fP] ...
+.\"
+.\"
+.It Cm --play \fIitem1\fP [\fIitem2\fP] ...
 Play items from default playlist.
-.It --playlist
+.\"
+.\"
+.It Cm --playlist
 Play default playlist.
 Mplayer slave will be automatically started if necessary.
-.It --randomize
+.\"
+.\"
+.It Cm --randomize
 This will randomize playlist, but won't start playing it... you'll need to run \fBplayd --playlist\fP to load new playlist.
-.It --restart [ --console ] [ --nofork ]
+.\"
+.\"
+.It Cm --restart [ --console ] [ --nofork ]
 Sometimes playd doesn't listen to your commands.
 Actually playd does listen, while mplayer doesn't.
 So if you don't get expected behavior from playd, please run \fBplayd --restart\fP and check if everything works.
 Only send bug report if same problem appears after restart.
 If \fB--console\fP is set, mplayer will only output sound.
 If \fB--fork\fP is set, playd will show mplayer output to current terminal.
-.It --rmlist
+.\"
+.\"
+.It Cm --rmlist
 Remove default playlist.
-.It --seek \fIvalue\fP [ --absolute | --precent ]
+.\"
+.\"
+.It Cm --seek \fIvalue\fP [ --absolute | --precent ]
 Seek current file to value.
 If \fB--absolute\fP is specified, seek to absolute value in seconds.
 If \fB--precent\fP is specified, seek to value percent.
 By default mplayer slave will seek relative in seconds.
 You many use modifiers (multipliers) to enter value... such as \fBy\fP \fBM\fP \fBw\fP \fBd\fP \fBh\fP \fBm\fP \fBs\fP [years, Months, weeks, days, hours, minutes, seconds] (in order mentioned) 
-
+.Pp
 For example: playd --seek -1m30s
-.It --sarution \fIvalue\fP [ --absolute ]
+.\"
+.\"
+.It Cm --sarution \fIvalue\fP [ --absolute ]
 Adjust sarution by value (relative by default).
 If \fB--absolute\fP key is specified, sarution will be set to absolute value.
 Value can be in range -100 to 100.
-.It --start [ --console ] [ --nofork ]
+.\"
+.\"
+.It Cm --start [ --console ] [ --nofork ]
 Start mplayer slave.
 You won't probably need to use this, because mplayer slave is started automatically when needed.
 If \fB--console\fP is set, mplayer will only output sound.
 If \fB--fork\fP is set, playd will show mplayer output to current terminal.
-.It --status
+.\"
+.\"
+.It Cm --status
 Check if mplayer is started in slave mode.
-.It --subtitles \fIfile\fP
+.\"
+.\"
+.It Cm --subtitles \fIfile\fP
 Load subtitles.
 This option doesn't check for filetype.
-.It --stop
+.\"
+.\"
+.It Cm --stop
 Stop mplayer slave.
-.It --switch-audio
+.\"
+.\"
+.It Cm --switch-audio
 Cycle through the available audio tracks. (for DVD)
-.It --switch-subtitle
+.\"
+.\"
+.It Cm --switch-subtitle
 Cycle through the available subtitle tracks. (for DVD)
-.It --volume \fIvalue\fP [ --absolute ]
+.\"
+.\"
+.It Cm --volume \fIvalue\fP [ --absolute ]
 Adjust volume by value (relative by default).
 If \fB--absolute\fP key is specified, volume will be set to absolute value.
 Value can be 0 - 100
-
+.Pp
 NOTE: on FreeBSD mplayer will reset volume after you seek in file.
 To avoid this you should set \fBhw.snd.vpc_autoreset=0\fP in your \fI/etc/sysctl.conf\fP under FreeBSD
-.It \fIfile\fP | \fIdirectory\fP | \fIstream\fP | \fIplaylist\fP
+.\"
+.\"
+.It Cm \fIfile\fP | \fIdirectory\fP | \fIstream\fP | \fIplaylist\fP
 play file, directory or stream.
 Mplayer will be automatically started in slave mode, if necessary.
+.\"
+.\"
+.El
+.\"
+.\"
 .Sh "COMMAND ALIASES"
 Every command that starts with \fB--\fP, has alias witout it (they aren't mentioned here)
 
