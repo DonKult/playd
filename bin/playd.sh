@@ -34,7 +34,7 @@
 # project email: playd@bsdroot.lv
 # 1}}}
 
-readonly PLAYD_VERSION='1.8.1'
+readonly PLAYD_VERSION='1.8.2'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -130,10 +130,9 @@ playd_put() {	# {{{1
 playd_check() {	# {{{1
 	# check if playd daemon is running and return pid
 	# returns 0 if daemon ain't running
-	if [ -f "$PLAYD_LOCK" ]; then
-		local pid=$(pgrep -g `cat $PLAYD_LOCK` -n mplayer)
-		[ $pid ] && return $pid
-	fi
+	[ -f "$PLAYD_LOCK" ] \
+		&& local pid=$(pgrep -g `cat $PLAYD_LOCK` -n mplayer) \
+		&& return $pid
 	return 0
 }	# 1}}}
 
