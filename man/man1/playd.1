@@ -55,9 +55,11 @@ in various window managers (i.e. fvwm2, fluxbox), scripts etc.
 .Pp
 .Nm
 is designed K.I.S.S.
-.Bl -tag
-.It Goal is to be small, fast and very easy to use.
-.It The goal is not to be as foolproof as possible.
+.Bl -bullet
+.It
+Goal is to be small, fast and very easy to use.
+.It
+The goal is not to be as foolproof as possible.
 .El
 .\"#############################################################################
 .Sh COMMANDS
@@ -66,7 +68,7 @@ Commands can be mixed almost in any order. There's only one limit:
 must be 1st argument, if specified.
 .Bl -tag -width indent
 .\"=============================================================================
-.It Cm --append
+.It --append
 Append items to default playlist. Must be first argument on command line if
 used.
 .\"=============================================================================
@@ -118,7 +120,9 @@ Play video DVD. (Can't append to playlist)
 .Ar file | directory
 .Xc
 Play file or directory. This option is handy if you have file name that match
-playd command
+one of
+.Nm
+commands
 .\"=============================================================================
 .It Cm --gamma Xo
 .Ar value
@@ -158,7 +162,9 @@ be various types, even text files. If you can't load some files, you can try to
 use this option. It won't check for file type and extension. This can be very
 useful for disk images. Note, that you need to set 
 .Cm --nocheck
-for every file you want playd to skip filetype checks.
+for every file you want
+.Nm
+to skip filetype checks.
 .\"=============================================================================
 .It Cm --pause
 Pause mplayer slave.
@@ -183,9 +189,14 @@ to load new playlist.
 .Op Cm --console
 .Op Cm --nofork
 .Xc
-Sometimes playd doesn't listen to your commands. Actually playd does listen,
-while mplayer doesn't. So if you don't get expected behavior from playd, please
-run 
+Sometimes
+.Nm
+doesn't listen to your commands. Actually
+.Nm
+does listen,
+while mplayer doesn't. So if you don't get expected behavior from
+.Nm
+, please run 
 .Nm 
 .Cm --restart
 and check if everything works. Only send bug report if same problem appears
@@ -193,7 +204,9 @@ after restart. If
 .Cm --console
 is set, mplayer will only output sound. If 
 .Cm --fork
-is set, playd will show mplayer output to current terminal.
+is set,
+.Nm
+will show mplayer output to current terminal.
 .\"=============================================================================
 .It Cm --rmlist
 Remove default playlist.
@@ -212,7 +225,10 @@ such as
 .Cm y, M, w, d, h, m, s
 [years, Months, weeks, days, hours, minutes, seconds] (in order mentioned) 
 .Pp
-For example: playd --seek -1m30s
+For example: 
+.Nm 
+.Cm --seek
+.Ar -1m30s
 .\"=============================================================================
 .It Cm --sarution Xo
 .Ar value
@@ -233,7 +249,9 @@ slave is started automatically when needed. If
 .Cm --console
 is set, mplayer will only output sound. If
 .Cm --nofork
-is set, playd will show mplayer output to current terminal.
+is set,
+.Nm
+will show mplayer output to current terminal.
 .\"=============================================================================
 .It Cm --status
 Check if mplayer is started in slave mode.
@@ -261,7 +279,11 @@ Adjust volume by value (relative by default). If
 key is specified, volume will be set to absolute value. Value can be 0 - 100
 .Pp
 NOTE: on FreeBSD mplayer will reset volume after you seek in file. To avoid
-this you should set \fBhw.snd.vpc_autoreset=0\fP in your \fI/etc/sysctl.conf\fP under FreeBSD
+this you should set 
+.Sy hw.snd.vpc_autoreset=0
+in your
+.Pa /etc/sysctl.conf
+under FreeBSD
 .\"=============================================================================
 .It Ar file | directory | stream | playlist
 play file, directory, stream or playlist. Mplayer will be automatically
@@ -273,7 +295,7 @@ started in slave mode, if necessary.
 Every command that starts with 
 .Cm --
 , has alias witout it (they aren't mentioned here)
-
+.Pp
    \ --absolute			                  	abs
    \ --append		      -a
    \ --cd                 -c                cdda
@@ -298,38 +320,104 @@ Every command that starts with
    \ --volume             -v   --vol
 .\"#############################################################################
 .Sh ENVIRONMENT
-Set PLAYD_MPLAYER_USER_OPTIONS, to add custom command line options passed to
-mplayer, when it's started.
-
-Set PLAYD_HOME, if you want to change playd home directory.
-
-By default it will use ~/.mplayer
+.Ev PLAYD_MPLAYER_USER_OPTIONS
+controls custom command line options passed to mplayer, when it's started.
+.Pp
+.Ev PLAYD_HOME
+makes
+.Nm
+keep all nessacery files in this directory. By default
+.Pa ~/.config/playd
+will be used
 .\"#############################################################################
 .Sh EXIT STATUS
 .Ex -std
 .\"#############################################################################
 .Sh EXAMPLES
-	playd /my/mysic
-
-	playd --append /mysic/1.mp3 /music/3.mp3
-
-	playd play 1 3 5
-
-	playd http://yp.shoutcast.com/sbin/tunein-station.pls?id=656847
-
-	playd stop
+Play all media files in /my/mysic directory.
+.Nm
+will be started automatically
+.Pp
+.Dl playd /my/mysic
+.Pp
+While playd is playing files you want to append two more files to playlist
+.Pp
+.Dl playd --append /my/other/music/1.mp3 /music/3.mp3
+.Pp
+You like few songs alot, and you'd like to know their playlist ID
+.Pp
+.Dl playd list 
+.Pp
+Once you figured you know song ID's, you can play them by simply running
+.Pp
+.Dl playd play 1 3 5
+.Pp
+So you figured, that you want to listen to some Latvian radio
+.Pp
+.Dl playd http://www.radioskonto.lv/online_radio/stereo.m3u
+.Pp
+Enough is enough... Turn off the player
+.Pp
+.Dl playd stop
 .\"#############################################################################
-.Sh SUPPORTED MEDIA FILE FORMATS:
+.Sh SUPPORTED MEDIA FILE FORMATS
+.Ar *.3gp ,
+.Ar *.acc ,
+.Ar *.aif ,
+.Ar *.aifc ,
+.Ar *.aiff ,
+.Ar *.ape ,
+.Ar *.avi ,
+.Ar *.divx ,
+.Ar *.dvx ,
+.Ar *.flac ,
+.Ar *.m4a ,
+.Ar *.m4b ,
+.Ar *.m4p ,
+.Ar *.m4r ,
+.Ar *.mid ,
+.Ar *.midi ,
+.Ar *.mka ,
+.Ar *.mkv ,
+.Ar *.mov ,
+.Ar *.mp1 ,
+.Ar *.mp2 ,
+.Ar *.mp3 ,
+.Ar *.mp4 ,
+.Ar *.mpa ,
+.Ar *.mpf ,
+.Ar *.mpg ,
+.Ar *.mpga ,
+.Ar *.oga ,
+.Ar *.ogg ,
+.Ar *.ogm ,
+.Ar *.ogv ,
+.Ar *.ogx ,
+.Ar *.vob ,
+.Ar *.wav ,
+.Ar *.wma ,
+.Ar *.wmv ,
+.Ar *.wv
+.Pp
 Basically everything supported by mplayer should be supoprted by playd. But
-since I had to figure out file extensions myself if some extensions are
+since I had to figure out file extensions myself, if some extensions are
 missing, please send a bug report to
-.Ar playd@bsdroot.lv
+.Mt playd@bsdroot.lv
 .\"#############################################################################
 .Sh SUPPORTED PLAYLISTS
 As of V1.7.10 playd has basic support for fallowing playlist file formats:
-
-pls, m3u, m3u8, asx, xspf, ram, plst, qtl, wax, wpl
-
+.Pp
+.Ar *.asx ,
+.Ar *.m3u ,
+.Ar *.m3u8 ,
+.Ar *.pls ,
+.Ar *.plst ,
+.Ar *.qtl ,
+.Ar *.ram ,
+.Ar *.wax ,
+.Ar *.wpl ,
+.Ar *.xspf
+.Pp
 NOTE: plst is simple file, with filenames/links (one per line). Somethimes,
 when you want to create sample playlist for internet steams, for example,
 it is very handy to put urls in plst.  Very simple and fast :)
@@ -344,7 +432,7 @@ it is very handy to put urls in plst.  Very simple and fast :)
 .\"#############################################################################
 .Sh AUTHORS
 .An -nosplit
-.An Aldis Berjoza Aq playd@bsdroot.lv
+.An Aldis Berjoza Aq Mt playd@bsdroot.lv
 .\"#############################################################################
 .Sh BUGS
 Seams 
