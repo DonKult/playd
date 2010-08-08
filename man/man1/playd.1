@@ -81,7 +81,7 @@ Adjust audio delay in seconds (relative by default). If
 is set, then audio delay will be set exactly to value in seconds.
 .\"=============================================================================
 .It Cm --cd Xo
-.Op track
+.Op Ar track
 .Xc
 Play audio CD. (Can't append to playlist)
 .\"=============================================================================
@@ -296,28 +296,30 @@ Every command that starts with
 .Cm --
 , has alias witout it (they aren't mentioned here)
 .Pp
-   \ --absolute			                  	abs
-   \ --append		      -a
-   \ --cd                 -c                cdda
-   \ --dvd                -d
-   \ --file               -f
-   \ --help               -h
-   \ --list               -l
-   \ --longlist           -L   --llist
-   \ --mute               -m
-   \ --next               -n
-   \ --pause              -z
-   \ --percent                              %
-   \ --play               -p
-   \ --playlist           -P
-   \ --randomize               --rnd 
-   \ --restart            -R
-   \ --seek               -s
-   \ --stop               -q
-   \ --subtitles          -S   --subs
-   \ --switch-audio            --sw-audio
-   \ --switch-subtitles        --sw-subs
-   \ --volume             -v   --vol
+.Bd -literal -offset indent
+--absolute							abs
+--append			-a
+--cd				-c				cdda
+--dvd				-d
+--file				-f
+--help				-h
+--list				-l
+--longlist		-L	--llist
+--mute				-m
+--next				-n
+--pause				-z
+--percent							%
+--play				-p
+--playlist		-P
+--randomize				--rnd	
+--restart		-R
+--seek				-s
+--stop				-q
+--subtitles		-S	--subs
+--switch-audio				--sw-audio
+--switch-subtitles		--sw-subs
+--volume			-v	--vol
+.Ed
 .\"#############################################################################
 .Sh ENVIRONMENT
 .Ev PLAYD_MPLAYER_USER_OPTIONS
