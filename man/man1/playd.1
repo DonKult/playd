@@ -37,13 +37,13 @@
 .Sh SYNOPSIS
 .Nm
 .Op Cm append
-.Op Ar commands | files | directories | streans
+.Op Ar commands | files | directories | streams
 .\"#############################################################################
 .Sh DESCRIPTION
 .Nm
-is a simple mplayer wrapper script wirtten in pure /bin/sh.  With 
+is a simple mplayer wrapper script written in pure /bin/sh.  With 
 .Nm
-you don't need mplayer gui, to listen to music, watch wideos, stream
+you don't need mplayer GUI, to listen to music, watch videos, stream
 video/audio.
 .Nm
 stores its playlist is simple plain text files, containing file names with
@@ -179,8 +179,8 @@ Play items from default playlist.
 .It Cm playlist
 Play default playlist. Mplayer slave will be automatically started if necessary.
 .\"=============================================================================
-.It Cm randomize
-This will randomize playlist, but won't start playing it... you'll need to run 
+.It Cm randomise
+This will randomise playlist, but won't start playing it... you'll need to run 
 .Nm
 .Cm playlist
 to load new playlist.
@@ -194,7 +194,7 @@ Sometimes
 doesn't listen to your commands. Actually
 .Nm
 does listen,
-while mplayer doesn't. So if you don't get expected behavior from
+while mplayer doesn't. So if you don't get expected behaviour from
 .Nm
 , please run 
 .Nm 
@@ -213,12 +213,12 @@ Remove default playlist.
 .\"=============================================================================
 .It Cm seek Xo 
 .Ar value
-.Op Cm absolute | Cm precent
+.Op Cm absolute | Cm present
 .Xc
 Seek current file to value. If 
 .Cm absolute
 is specified, seek to absolute value in seconds. If 
-.Cm precent
+.Cm present
 is specified, seek to value percent. By default mplayer slave will seek
 relative in seconds. You many use modifiers (multipliers) to enter value...
 such as
@@ -311,7 +311,7 @@ pause			-z
 percent						%
 play			-p
 playlist		-P
-randomize			rnd	
+randomise			rnd	
 restart			-R
 seek			-s
 stop			-q
@@ -328,7 +328,7 @@ controls custom command line options passed to mplayer, when it's started.
 .Ev PLAYD_HOME
 makes
 .Nm
-keep all nessacery files in this directory. By default
+keep all necessary files in this directory. By default
 .Pa ~/.config/playd
 will be used
 .\"#############################################################################
@@ -336,21 +336,21 @@ will be used
 .Ex -std
 .\"#############################################################################
 .Sh EXAMPLES
-Play all media files in /my/mysic directory.
+Play all media files in /my/music directory.
 .Nm
 will be started automatically
 .Pp
-.Dl playd /my/mysic
+.Dl playd /my/music
 .Pp
 While playd is playing files you want to append two more files to playlist
 .Pp
 .Dl playd --append /my/other/music/1.mp3 /music/3.mp3
 .Pp
-You like few songs alot, and you'd like to know their playlist ID
+You like few songs a lot, and you'd like to know their playlist ID
 .Pp
 .Dl playd list 
 .Pp
-Once you figured you know song ID's, you can play them by simply running
+Once you figured you know song IDs, you can play them by simply running
 .Pp
 .Dl playd play 1 3 5
 .Pp
@@ -401,7 +401,7 @@ Enough is enough... Turn off the player
 .Ar *.wmv ,
 .Ar *.wv
 .Pp
-Basically everything supported by mplayer should be supoprted by playd. But
+Basically everything supported by mplayer should be supported by playd. But
 since I had to figure out file extensions myself, if some extensions are
 missing, please send a bug report to
 .Mt playd@bsdroot.lv
@@ -420,9 +420,9 @@ As of V1.7.10 playd has basic support for fallowing playlist file formats:
 .Ar *.wpl ,
 .Ar *.xspf
 .Pp
-NOTE: plst is simple file, with filenames/links (one per line). Somethimes,
-when you want to create sample playlist for internet steams, for example,
-it is very handy to put urls in plst.  Very simple and fast :)
+NOTE: plst is simple file, with filenames/links (one per line). Sometimes,
+when you want to create sample playlist for Internet steams, for example,
+it is very handy to put URLs in plst.  Very simple and fast :)
 .\"#############################################################################
 .Sh HOMEPAGE
 .Lk http://wiki.bsdroot.lv/playd "Playd wiki page"

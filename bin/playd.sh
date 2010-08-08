@@ -63,7 +63,7 @@ readonly PLAYD_PIPE="$PLAYD_HOME/fifo"
 readonly PLAYD_PLAYLIST="$PLAYD_HOME/playlist.plst"
 readonly PLAYD_LOCK="$PLAYD_HOME/lock"
 
-# to customize mplayers cmdl set PLAYD_MPLAYER_USER_OPTIONS env variable
+# to customise mplayers command line set PLAYD_MPLAYER_USER_OPTIONS environment variable
 readonly MPLAYER_CMD_GENERIC="$PLAYD_MPLAYER_USER_OPTIONS -really-quiet -idle -input file=$PLAYD_PIPE"
 readonly MPLAYER_CMD="mplayer $MPLAYER_CMD_GENERIC"
 readonly MPLAYER_SND_ONLY_CMD="mplayer -vo null $MPLAYER_CMD_GENERIC"
@@ -103,10 +103,10 @@ COMMANDS (long names):
 --pause
 --play item1 [item2] ...
 --playlist
---randomize
+--randomise
 --restart [ --console ] [ --nofork ]
 --rmlist
---seek value [ --absolute | --precent ]
+--seek value [ --absolute | --present ]
 --sarution value [ --absolute ]
 --start [ --console ] [ --nofork ]
 --status
@@ -210,7 +210,7 @@ playd_mk_playlist() {	# {{{1
 		elif [ -d "$1/$fileName" ]; then
 			playd_mk_playlist "$1/$fileName"
 		else
-			playd_die "wtf: \"$1/$fileName\""
+			playd_die "What the hell: \"$1/$fileName\""
 		fi
 	done
 }	# 1}}}
@@ -265,8 +265,8 @@ playd_playlist_add() {	# {{{1
 	playd_append=1
 }	# 1}}}
 
-playd_randomize() {	# {{{1
-	# this function will randomize default playlist
+playd_randomise() {	# {{{1
+	# this function will randomise default playlist
 	rm -f "$PLAYD_PLAYLIST.tmp"
 	[ ! -d "$PLAYD_HOME/rand" ] \
 		&& mkdir "$PLAYD_HOME/rand" \
@@ -513,8 +513,8 @@ while [ $# -gt 0 ]; do
 				'sub_select' '--switch-subtitles switch-subtitles --sw-subs sw-subs')"
 		;;
 
-		'rnd' | '--rnd' | '--randomize' | 'randomize' )
-			playd_randomize
+		'rnd' | '--rnd' | '--randomise' | 'randomise' )
+			playd_randomise
 		;;
 
 		*'://'* )
