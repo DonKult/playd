@@ -85,36 +85,36 @@ from forums.freebsd.org for few lines of sh
 
 
 COMMANDS (long names):
---append
---audio-delay value [ --absolute ]
---cd [ track ]
---cmd 'mplayer command'
---brightness value [ --absolute 
---contrast value [ --absolute ]
---dvd [ track ]
---file [ file | directory ]
---gamma value [ --absolute ]
---hue value [ --absolute ]
---list
---longlist
---mute
---next
---nocheck file
---pause
---play item1 [item2] ...
---playlist
---randomise
---restart [ --console ] [ --nofork ]
---rmlist
---seek value [ --absolute | --present ]
---sarution value [ --absolute ]
---start [ --console ] [ --nofork ]
---status
---subtitles file
---stop
---switch-audio
---switch-subtitle
---volume value [ --absolute ]
+  append
+  audio-delay value [ --absolute ]
+  cd [ track ]
+  cmd 'mplayer command'
+  brightness value [ --absolute 
+  contrast value [ --absolute ]
+  dvd [ track ]
+  file [ file | directory ]
+  gamma value [ --absolute ]
+  hue value [ --absolute ]
+  list
+  longlist
+  mute
+  next
+  nocheck file
+  pause
+  play item1 [item2] ...
+  playlist
+  randomise
+  restart [ --console ] [ --nofork ]
+  rmlist
+  seek value [ --absolute | --present ]
+  sarution value [ --absolute ]
+  start [ --console ] [ --nofork ]
+  status
+  subtitles file
+  stop
+  switch-audio
+  switch-subtitle
+  volume value [ --absolute ]
 
 see playd(1) for more info
 EOF
