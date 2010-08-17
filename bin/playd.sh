@@ -179,20 +179,13 @@ playd_stop() {	# {{{1
 	playd_check || {
 		pid=$?
 		playd_put 'quit'
-		sleep 1 # give mplayer 1s to quit
-		kill -s 0 $pid 2> /dev/null && {
+		sleep 1 # give mplayer 1 second to quit
+		for i in 1 2 3; do
+			kill -s 0 $pid 2> /dev/null || return
 			kill $pid 2> /dev/null
 			sleep 1
-			kill -s 0 $pid 2> /dev/null && {
-				kill $pid 2> /dev/null
-				sleep 1
-				kill -s 0 $pid 2> /dev/null && {
-					kill -s KILL $kill_pid 2> /dev/null
-					sleep 1
-					kill -s 0 $pid 2> /dev/null && playd_die "Can't kill mplayer slave with pid $kill_pid"
-				}
-			}
-		}
+		done
+		kill -s 0 $pid 2> /dev/null && playd_die "Can't kill mplayer slave with pid $kill_pid"
 	}
 	playd_clean
 }	# 1}}}
