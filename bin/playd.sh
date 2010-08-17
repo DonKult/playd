@@ -34,7 +34,7 @@
 # project email: playd@bsdroot.lv
 # 1}}}
 
-readonly PLAYD_VERSION='1.9.1'
+readonly PLAYD_VERSION='1.9.2'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -546,8 +546,9 @@ while [ $# -gt 0 ]; do
 				playd_mk_playlist "$fileName"
 				[ $playd_append -eq 1 ] \
 					&& cat "$PLAYD_PLAYLIST.tmp" >> "$PLAYD_PLAYLIST" \
-					|| { cp -f "$PLAYD_PLAYLIST.tmp" "$PLAYD_PLAYLIST"; playd_append=1; }
+					|| cp -f "$PLAYD_PLAYLIST.tmp" "$PLAYD_PLAYLIST"
 				playd_put "loadlist '$PLAYD_PLAYLIST' $playd_append"
+				playd_append=1;
 			else
 				playd_warn "\"$fileName\" doesn't seam to be valid file for playback. Ignoring" 'to override use:' "  playd --nocheck $fileName"
 			fi
