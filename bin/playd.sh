@@ -34,7 +34,7 @@
 # project email: playd@bsdroot.lv
 # 1}}}
 
-readonly PLAYD_VERSION='1.9.3'
+readonly PLAYD_VERSION='1.9.4'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -89,6 +89,7 @@ from forums.freebsd.org for few lines of sh
 COMMANDS (long names):
   append
   audio-delay value [ --absolute ]
+  cat
   cd [ track ]
   cmd 'mplayer command'
   brightness value [ --absolute 
@@ -98,6 +99,7 @@ COMMANDS (long names):
   gamma value [ --absolute ]
   hue value [ --absolute ]
   list
+  longcat
   longlist
   mute
   next
@@ -377,6 +379,26 @@ while [ $# -gt 0 ]; do
 			CONSOLE=$(playd_match "$2" '0' '1' 'console --console')
 			shift $(($NOVID + $CONSOLE))
 			playd_start $match1 $match2
+		;;
+
+		'cat' | '--cat' )
+			if [ -f "$PLAYD_PLAYLIST" ]; then
+				if [ "$OS" = 'FreeBSD' ]; then
+					sed -r -e 's#^.*/##' -e 's#_# #g' -E -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -E -e "s#\.($PLAYD_FILE_FORMATS)\$##" "$PLAYD_PLAYLIST" | awk '{ print NR "|\t" $0 }'
+				else
+					# assuming Linux
+					sed -r -e 's#^.*/##' -e 's#_# #g' -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -e "s#\.($PLAYD_FILE_FORMATS)\$##" "$PLAYD_PLAYLIST" | awk '{ print NR "|\t" $0 }' 
+				fi
+			else
+				playd_warn "Default playlist doesn't exist."
+			fi
+
+		;;
+
+		'--longcat' | 'longcat' | 'lcat' | '--lcat' )
+			[ -f "$PLAYD_PLAYLIST" ] \
+				&& awk '{ print NR "|\t" $0 }' "$PLAYD_PLAYLIST" \
+				|| playd_warn "Default playlist doesn't exist."
 		;;
 
 		'list' | '--list' | '-l' )
