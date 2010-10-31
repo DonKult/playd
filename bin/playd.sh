@@ -34,7 +34,7 @@
 # project email: playd@bsdroot.lv
 # 1}}}
 
-readonly PLAYD_VERSION='1.9.4'
+readonly PLAYD_VERSION='1.9.5'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -72,7 +72,7 @@ readonly MPLAYER_SND_ONLY_CMD="mplayer -vo null $MPLAYER_CMD_GENERIC"
 
 playd_help() {	#{{{1
 	# print help
-	cat << EOF
+	more -i << EOF
 $PLAYD_NAME (playd.sh) v$PLAYD_VERSION
 by Aldis Berjoza
 http://wiki.bsdroot.lv/playd
@@ -404,10 +404,10 @@ while [ $# -gt 0 ]; do
 		'list' | '--list' | '-l' )
 			if [ -f "$PLAYD_PLAYLIST" ]; then
 				if [ "$OS" = 'FreeBSD' ]; then
-					sed -r -e 's#^.*/##' -e 's#_# #g' -E -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -E -e "s#\.($PLAYD_FILE_FORMATS)\$##" "$PLAYD_PLAYLIST" | awk '{ print NR "|\t" $0 }' | more
+					sed -r -e 's#^.*/##' -e 's#_# #g' -E -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -E -e "s#\.($PLAYD_FILE_FORMATS)\$##" "$PLAYD_PLAYLIST" | awk '{ print NR "|\t" $0 }' | more -i
 				else
 					# assuming Linux
-					sed -r -e 's#^.*/##' -e 's#_# #g' -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -e "s#\.($PLAYD_FILE_FORMATS)\$##" "$PLAYD_PLAYLIST" | awk '{ print NR "|\t" $0 }' | more
+					sed -r -e 's#^.*/##' -e 's#_# #g' -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -e "s#\.($PLAYD_FILE_FORMATS)\$##" "$PLAYD_PLAYLIST" | awk '{ print NR "|\t" $0 }' | more -i
 				fi
 			else
 				playd_warn "Default playlist doesn't exist."
@@ -417,7 +417,7 @@ while [ $# -gt 0 ]; do
 
 		'--longlist' | 'longlist' | 'llist' | '--llist' | '-L' )
 			[ -f "$PLAYD_PLAYLIST" ] \
-				&& awk '{ print NR "|\t" $0 }' "$PLAYD_PLAYLIST" | more \
+				&& awk '{ print NR "|\t" $0 }' "$PLAYD_PLAYLIST" | more -i \
 				|| playd_warn "Default playlist doesn't exist."
 		;;
 
