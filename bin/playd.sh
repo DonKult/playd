@@ -34,7 +34,7 @@
 # project email: playd@bsdroot.lv
 # 1}}}
 
-readonly PLAYD_VERSION='1.9.7'
+readonly PLAYD_VERSION='1.9.8'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -60,7 +60,7 @@ playd_die() {	# {{{1
 
 readonly OS=`uname`
 
-readonly PLAYD_HOME="$HOME/.config/playd"
+readonly PLAYD_HOME="${XDG_CONFIG_HOME:-"$HOME/.config/playd"}/playd"
 readonly PLAYD_PIPE="$PLAYD_HOME/fifo"
 readonly PLAYD_PLAYLIST="$PLAYD_HOME/playlist.plst"
 readonly PLAYD_LOCK="$PLAYD_HOME/lock"
