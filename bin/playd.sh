@@ -573,43 +573,43 @@ while [ $# -gt 0 ]; do
 		'get' | '--get')
 			case "$2" in
 				'album' | 'artist' | 'comment' | 'genre' | 'title' | 'track' | 'year' )
-					playd_mplayer_get "get_meta_$2"
+					playd_mplayer_get "pausing_keep get_meta_$2"
 				;;
 
 				'name' )
-					playd_mplayer_get "get_file_$2"
+					playd_mplayer_get "pausing_keep get_file_$2"
 				;;
 
 				'audio_bitrate' | 'audio_codec' | 'audio_samples' )
-					playd_mplayer_get "get_$2"
+					playd_mplayer_get "pausing_keep get_$2"
 				;;
 
 				'samples' )
-					playd_mplayer_get "get_audio_$2"
+					playd_mplayer_get "pausing_keep get_audio_$2"
 				;;
 
 				'sub_visibility' )
-					playd_mplayer_get "get_$2"
+					playd_mplayer_get "pausing_keep get_$2"
 				;;
 
 				'length' | 'pos' )
-					playd_mplayer_get "get_time_$2"
+					playd_mplayer_get "pausing_keep get_time_$2"
 				;;
 
 				'fullscreen' )
-					playd_mplayer_get "get_vo_$2"
+					playd_mplayer_get "pausing_keep get_vo_$2"
 				;;
 
 				'video_bitrate' | 'video_codec' )
-					playd_mplayer_get "get_$2"
+					playd_mplayer_get "pausing_keep get_$2"
 				;;
 
 				'resolution' )
-					playd_mplayer_get "get_video_$2"
+					playd_mplayer_get "pausing_keep get_video_$2"
 				;;
 
 				* )
-					playd_mplayer_get "get_property $2"
+					playd_mplayer_get "pausing_keep get_property $2"
 				;;
 			esac
 			shift 2
