@@ -62,12 +62,15 @@ playd_die() {	# {{{1
 readonly OS=`uname`
 
 readonly PLAYD_HOME="${XDG_CONFIG_HOME:-"$HOME/.config"}/playd"
-readonly PLAYD_PIPE="$PLAYD_HOME/fifo"
+readonly PLAYD_PIPE="$PLAYD_HOME/playd.fifo"
+readonly MPLAYER_PIPE="$PLAYD_HOME/mplayer.fifo"
 readonly PLAYD_PLAYLIST="$PLAYD_HOME/playlist.plst"
-readonly PLAYD_LOCK="$PLAYD_HOME/lock"
+readonly PLAYD_LOCK="$PLAYD_HOME/mplayer.lock"
+readonly CAT_LOCK="$PLAYD_HOME/cat.lock"
 
 # to customise mplayers command line set PLAYD_MPLAYER_USER_OPTIONS environment variable
-readonly MPLAYER_CMD_GENERIC="$PLAYD_MPLAYER_USER_OPTIONS -really-quiet -idle -input file=$PLAYD_PIPE"
+#readonly MPLAYER_CMD_GENERIC="$PLAYD_MPLAYER_USER_OPTIONS -really-quiet -idle -input file=$PLAYD_PIPE"
+readonly MPLAYER_CMD_GENERIC="$PLAYD_MPLAYER_USER_OPTIONS -quiet -idle -input file=$PLAYD_PIPE"
 readonly MPLAYER_CMD="mplayer $MPLAYER_CMD_GENERIC"
 readonly MPLAYER_SND_ONLY_CMD="mplayer -vo null $MPLAYER_CMD_GENERIC"
 
@@ -128,7 +131,7 @@ EOF
 playd_put() {	# {{{1
 	# put argv into pipe
 	playd_check \
-		&& { playd_clean; [ "$1" != "quit" ] && { playd_start && echo "$*" >> "$PLAYD_PIPE"; }; } \
+		&& { playd_clean; [ "$1" != "quit" ] && { playd_start; echo "$*" >> "$PLAYD_PIPE"; }; } \
 		|| echo "$*" >> "$PLAYD_PIPE"
 }	# 1}}}
 
@@ -144,7 +147,7 @@ playd_check() {	# {{{1
 playd_clean() {	#{{{1
 	# clean files after playd
 	rm -f "$PLAYD_PLAYLIST.tmp"
-	playd_check && rm -f "$PLAYD_PIPE" "$PLAYD_LOCK"
+	playd_check && rm -f "$PLAYD_PIPE" "$PLAYD_LOCK" "$MPLAYER_PIPE" "$CAT_LOCK"
 }	# 1}}}
 
 playd_start() {	# {{{1
@@ -153,27 +156,18 @@ playd_start() {	# {{{1
 	# console novid (order doesn't matter)
 	playd_check && {
 		[ -p "$PLAYD_PIPE" ] || { mkfifo "$PLAYD_PIPE" || playd_die "Can't create \"$PLAYD_PIPE\""; }
+		[ -p "$MPLAYER_PIPE" ] || { mkfifo "$MPLAYER_PIPE" || playd_die "Can't create \"$MPLAYER_PIPE\""; }
 		cd /
 		[ $NOVID -eq 0 ] \
 			&& local mplayer_run_cmd="$MPLAYER_CMD" \
 			|| local mplayer_run_cmd="$MPLAYER_SND_ONLY_CMD"
 
-		if [ $CONSOLE -eq 0 ]; then
-			{ ${mplayer_run_cmd} > /dev/null 2> /dev/null & } \
-				&& echo "$$" > "$PLAYD_LOCK" \
-				|| playd_die 'Failed to start mplayer'
-		else
-			local dbg_pipe="$PLAYD_HOME/playd_debug.pipe"
-			mkfifo "$dbg_pipe"
-			{ exec ${mplayer_run_cmd} 2>&1 > "$dbg_pipe" & } \
-				&& echo "$$" > "$PLAYD_LOCK" \
-				|| playd_die 'Failed to start mplayer'
-			cat "$dbg_pipe"
-			playd_clean
-			rm -f "$dbg_pipe"
-			exit
-		fi
+		#{ ${mplayer_run_cmd} > "$MPLAYER_PIPE" 2> /dev/null & } \
+		{ ${mplayer_run_cmd} > "$MPLAYER_PIPE" 2> /dev/null & } \
+			&& echo "$$" > "$PLAYD_LOCK" \
+			|| playd_die 'Failed to start mplayer'
 		cd - > /dev/null 2> /dev/null
+		playd_start_catnull
 	}
 }	# 1}}}
 
@@ -184,7 +178,7 @@ playd_stop() {	# {{{1
 		playd_put 'quit'
 		sleep 1 # give mplayer 1 second to quit
 		for i in 1 2 3; do
-			kill -s 0 $pid 2> /dev/null || return
+			kill -s 0 $pid 2> /dev/null || { playd_clean; return; }
 			kill $pid 2> /dev/null
 			sleep 1
 		done
@@ -344,6 +338,42 @@ playd_time2s() { # {{{1
 	# arg1 time in human readable form (for example 2m30s)
 	echo "$1" | sed -e 's/y/*31536000+/' -e 's/M/*2592000+/' -e 's/w/*604800+/' -e 's/d/*86400+/' -e 's/h/*3600+/' -e 's/m/*60+/' -e 's/s//' -e 's/\+$//' | bc -l
 } # 1}}}
+
+playd_start_catnull() { # {{{1
+	# Start cat process, that will clear mplayers output pipe
+	cd /
+	cat "$MPLAYER_PIPE" > /dev/null &
+	echo "$!" > "$CAT_LOCK"
+	cd - > /dev/null 2> /dev/null
+} # 1}}}
+
+playd_catnull_check() { # {{{1
+	# get pid of cat process that is clearing mplayers output pipe
+	[ -f "$CAT_LOCK" ] \
+		&& local pid=$(pgrep -F "$CAT_LOCK") \
+		&& return $pid
+	return 0
+} # 1}}}
+
+playd_mplayer_get() { # {{{1
+	# get info from mplayer...
+	# WARNING: this one is killing mplayer pretty easely
+	#    I think it's an mplayers bug
+	playd_check && {
+		if [ -f "$CAT_LOCK" ]; then
+			pkill -F "$CAT_LOCK"
+			rm -f "$CAT_LOCK"
+		fi
+
+		cat "$MPLAYER_PIPE" &
+		pid=$!
+		playd_put "$*"
+		sleep 1
+		kill $pid
+		playd_start_catnull
+	}
+} # 1}}}
+
 
 # checking for mplayer
 [ "$(which mplayer)" ] || playd_die 'mplayer not found'
