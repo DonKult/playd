@@ -357,9 +357,7 @@ playd_catnull_check() { # {{{1
 
 playd_mplayer_get() { # {{{1
 	# get info from mplayer...
-	# WARNING: this one is killing mplayer pretty easely
-	#    I think it's an mplayers bug
-	playd_check && {
+	playd_check || {
 		if [ -f "$CAT_LOCK" ]; then
 			pkill -F "$CAT_LOCK"
 			rm -f "$CAT_LOCK"
@@ -382,7 +380,6 @@ playd_mplayer_get() { # {{{1
 
 [ $# -eq 0 ] && playd_help
 
-CONSOLE=0
 NOVID=0
 
 playd_append=$(playd_match "$1" 0 1 'append --append -a')
@@ -571,6 +568,51 @@ while [ $# -gt 0 ]; do
 
 		'rnd' | '--rnd' | '--randomise' | 'randomise' )
 			playd_randomise
+		;;
+
+		'get' | '--get')
+			case "$2" in
+				'album' | 'artist' | 'comment' | 'genre' | 'title' | 'track' | 'year' )
+					playd_mplayer_get "get_meta_$2"
+				;;
+
+				'name' )
+					playd_mplayer_get "get_file_$2"
+				;;
+
+				'audio_bitrate' | 'audio_codec' | 'audio_samples' )
+					playd_mplayer_get "get_$2"
+				;;
+
+				'samples' )
+					playd_mplayer_get "get_audio_$2"
+				;;
+
+				'sub_visibility' )
+					playd_mplayer_get "get_$2"
+				;;
+
+				'length' | 'pos' )
+					playd_mplayer_get "get_time_$2"
+				;;
+
+				'fullscreen' )
+					playd_mplayer_get "get_vo_$2"
+				;;
+
+				'video_bitrate' | 'video_codec' )
+					playd_mplayer_get "get_$2"
+				;;
+
+				'resolution' )
+					playd_mplayer_get "get_video_$2"
+				;;
+
+				* )
+					playd_mplayer_get "get_property $2"
+				;;
+			esac
+			shift 2
 		;;
 
 		*'://'* )
