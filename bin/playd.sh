@@ -34,7 +34,7 @@
 # project email: playd@bsdroot.lv
 # 1}}}
 
-readonly PLAYD_VERSION='1.12.0'
+readonly PLAYD_VERSION='1.12.1'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -527,11 +527,14 @@ while [ $# -gt 0 ]; do
 	
 	'jump' | '--jump' )
 		if [ -f "$PLAYD_PLAYLIST" ]; then
-			current_id=$(($current_id - 1))
-			awk 'NR >= '"$2"' { print $0 }' "$PLAYD_PLAYLIST"  > "$PLAYD_PLAYLIST.tmp"
-			shift
-			playd_put "loadlist '$PLAYD_PLAYLIST.tmp' $playd_append"
-			playd_append=1
+			if [ -n $2 ]; then
+				awk 'NR >= '"$2"' { print $0 }' "$PLAYD_PLAYLIST"  > "$PLAYD_PLAYLIST.tmp"
+				shift
+				playd_put "loadlist '$PLAYD_PLAYLIST.tmp' $playd_append"
+				playd_append=1
+			else
+				playd_warn "$1 needs numeric argument. Ignoring"
+			fi
 		else
 			playd_warn "Default playlist doesn't exist."
 		fi
