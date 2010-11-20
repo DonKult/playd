@@ -34,7 +34,7 @@
 # project email: playd@bsdroot.lv
 # 1}}}
 
-readonly PLAYD_VERSION='1.12.4'
+readonly PLAYD_VERSION='1.12.5'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -359,9 +359,7 @@ playd_current_conn() { # {{{1
 playd_current_file_escaped() { # {{{1
 	# prints current file name, that mplayer is playing.
 	# this function prepares string for awk (adds escape sequences)
-	playd_current_file | sed -e 's#/#\\\/#g' -e 's#\.#\\\.#g' -e 's#\[#\\\[#g' -e 's#\]#\\\]#g' \
-		-e 's#)#\\\)#g' -e 's#(#\\\(#g' -e 's#\*#\\\*#g' -e 's#{#\\\{#g' -e 's#}#\\\}#g' \
-		-e 's#+#\\\+#g' -e 's#?#\\\?#g'
+	playd_current_file | sed -e 's#[/.)(*{}+?$^]#\\&#g' -e 's#\[#\\\[#g' -e 's#\]#\\\]#g'
 } # 1}}}
 
 playd_cat_playlist() { # {{{1
