@@ -377,7 +377,15 @@ playd_mplayer_get() { # {{{1
 playd_current_file() { # {{{1
 	# prints current file name, that mplayer is playing
 	playd_check
-	procstat -f $? | grep -e ' 4 v r r-------' | awk '{print $10}'
+	pid=$?
+	[ $pid -ne 0 ] && procstat -f $pid | grep -e ' 4 v r r-------' | awk '{print $10}'
+} # 1}}}
+
+playd_current_conn() { # {{{1
+	# prints current connection info of stream
+	playd_check
+	pid=$?
+	[ $pid -ne 0 ] && procstat -f $pid | grep -e ' 4 s - rw------' | awk '{print $9" "$11" -> "$10}'
 } # 1}}}
 
 # checking for mplayer
@@ -623,6 +631,14 @@ while [ $# -gt 0 ]; do
 			;;
 		esac
 		shift 2
+		;;
+	
+	'filename' | '--filename' | 'fname' | '--fname' )
+		playd_current_file
+		;;
+
+	'conn' | '--conn' | 'connection' | '--connection' )
+		playd_current_conn
 		;;
 
 	*'://'* )
