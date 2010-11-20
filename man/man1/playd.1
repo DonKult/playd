@@ -222,8 +222,7 @@ This will randomise playlist, but won't start playing it... you'll need to run
 to load new playlist.
 .\"===================================================================== restart
 .It Cm restart Xo
-.Op Cm console
-.Op Cm nofork
+.Op Cm novid
 .Xc
 Sometimes
 .Nm
@@ -237,12 +236,8 @@ while mplayer doesn't. So if you don't get expected behaviour from
 .Cm restart
 and check if everything works. Only send bug report if same problem appears
 after restart. If 
-.Cm console
-is set, mplayer will only output sound. If 
-.Cm fork
-is set,
-.Nm
-will show mplayer output to current terminal.
+.Cm novid
+is set, mplayer will only output sound. 
 .\"====================================================================== rmlist
 .It Cm rmlist
 Remove default playlist.
@@ -277,17 +272,12 @@ key is specified, saturation will be set to absolute value.
 Value can be in range -100 to 100.
 .\"======================================================================= start
 .It Cm start Xo
-.Op Cm console
-.Op Cm nofork
+.Op Cm novid
 .Xc
 Start mplayer slave. You won't probably need to use this, because mplayer
 slave is started automatically when needed. If 
-.Cm console
-is set, mplayer will only output sound. If
-.Cm nofork
-is set,
-.Nm
-will show mplayer output to current terminal.
+.Cm novid
+is set, mplayer will only output sound.
 .\"====================================================================== status
 .It Cm status
 Check if mplayer is started in slave mode.
