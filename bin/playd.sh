@@ -163,7 +163,6 @@ playd_start() {	# {{{1
 		[ $NOVID -eq 0 ] \
 			&& local mplayer_run_cmd="$MPLAYER_CMD" \
 			|| local mplayer_run_cmd="$MPLAYER_SND_ONLY_CMD"
-		sleep 1
 
 		#{ ${mplayer_run_cmd} > "$MPLAYER_PIPE" 2> /dev/null & } \
 		{ ${mplayer_run_cmd} > "$MPLAYER_PIPE" 2> /dev/null & } \
@@ -375,6 +374,11 @@ playd_mplayer_get() { # {{{1
 	}
 } # 1}}}
 
+playd_current_file() { # {{{1
+	# prints current file name, that mplayer is playing
+	playd_check
+	procstat -f $? | grep -e ' 4 v r r-------' | awk '{print $10}'
+} # 1}}}
 
 # checking for mplayer
 [ "$(which mplayer)" ] || playd_die 'mplayer not found'
