@@ -164,7 +164,6 @@ playd_start() {	# {{{1
 			&& local mplayer_run_cmd="$MPLAYER_CMD" \
 			|| local mplayer_run_cmd="$MPLAYER_SND_ONLY_CMD"
 
-		#{ ${mplayer_run_cmd} > "$MPLAYER_PIPE" 2> /dev/null & } \
 		{ ${mplayer_run_cmd} > "$MPLAYER_PIPE" 2> /dev/null & } \
 			&& echo "$$" > "$PLAYD_LOCK" \
 			|| playd_die 'Failed to start mplayer'
@@ -378,7 +377,8 @@ playd_current_file() { # {{{1
 	# prints current file name, that mplayer is playing
 	playd_check
 	pid=$?
-	[ $pid -ne 0 ] && procstat -f $pid | grep -e ' 4 v r r-------' | awk '{print $10}'
+	# this sed pattern is ugly if you ask me, yet I can't figure out better one
+	[ $pid -ne 0 ] && procstat -f $pid | grep -e ' 4 v r r-------' | sed -e 's#.* /#/#'
 } # 1}}}
 
 playd_current_conn() { # {{{1
@@ -425,11 +425,12 @@ while [ $# -gt 0 ]; do
 
 	'cat' | '--cat' )
 		if [ -f "$PLAYD_PLAYLIST" ]; then
+			current_file="`playd_current_file | sed -e 's#/#\\\/#g' -e 's#\.#\\\.#g'`"
 			if [ "$OS" = 'FreeBSD' ]; then
-				sed -r -e 's#^.*/##' -e 's#_# #g' -E -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -E -e "s#\.($PLAYD_FILE_FORMATS)\$##" "$PLAYD_PLAYLIST" | awk '{ print NR "|\t" $0 }'
+				awk '/^'"$current_file"'$/ { print NR"|* " $0; next } /.*/ { print NR "|  " $0 }'  "$PLAYD_PLAYLIST" | sed -r -e 's#/.*/##' -e 's#_# #g' -E -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -E -e "s#\.($PLAYD_FILE_FORMATS)\$##"
 			else
 				# assuming Linux
-				sed -r -e 's#^.*/##' -e 's#_# #g' -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -e "s#\.($PLAYD_FILE_FORMATS)\$##" "$PLAYD_PLAYLIST" | awk '{ print NR "|\t" $0 }' 
+				awk '/^'"$current_file"'$/ { print NR"|* " $0; next } /.*/ { print NR "|  " $0 }'  "$PLAYD_PLAYLIST" | sed -r -e 's#/.*/##' -e 's#_# #g' -E -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -e "s#\.($PLAYD_FILE_FORMATS)\$##"
 			fi
 		else
 			playd_warn "Default playlist doesn't exist."
@@ -438,18 +439,22 @@ while [ $# -gt 0 ]; do
 		;;
 
 	'--longcat' | 'longcat' | 'lcat' | '--lcat' )
-		[ -f "$PLAYD_PLAYLIST" ] \
-			&& awk '{ print NR "|\t" $0 }' "$PLAYD_PLAYLIST" \
-			|| playd_warn "Default playlist doesn't exist."
+		if [ -f "$PLAYD_PLAYLIST" ]; then
+			current_file="`playd_current_file | sed -e 's#/#\\\/#g' -e 's#\.#\\\.#g'`"
+			awk '/^'"$current_file"'$/ { print NR"|* " $0; next } /.*/ { print NR "|  " $0 }'  "$PLAYD_PLAYLIST"
+		else
+			playd_warn "Default playlist doesn't exist."
+		fi
 		;;
 
 	'list' | '--list' | '-l' )
 		if [ -f "$PLAYD_PLAYLIST" ]; then
+			current_file="`playd_current_file | sed -e 's#/#\\\/#g' -e 's#\.#\\\.#g'`"
 			if [ "$OS" = 'FreeBSD' ]; then
-				sed -r -e 's#^.*/##' -e 's#_# #g' -E -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -E -e "s#\.($PLAYD_FILE_FORMATS)\$##" "$PLAYD_PLAYLIST" | awk '{ print NR "|\t" $0 }' | $PAGER
+				awk '/^'"$current_file"'$/ { print NR"|* " $0; next } /.*/ { print NR "|  " $0 }'  "$PLAYD_PLAYLIST" | sed -r -e 's#/.*/##' -e 's#_# #g' -E -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -E -e "s#\.($PLAYD_FILE_FORMATS)\$##" | $PAGER
 			else
 				# assuming Linux
-				sed -r -e 's#^.*/##' -e 's#_# #g' -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -e "s#\.($PLAYD_FILE_FORMATS)\$##" "$PLAYD_PLAYLIST" | awk '{ print NR "|\t" $0 }' | $PAGER
+				awk '/^'"$current_file"'$/ { print NR"|* " $0; next } /.*/ { print NR "|  " $0 }'  "$PLAYD_PLAYLIST" | sed -r -e 's#/.*/##' -e 's#_# #g' -E -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -e "s#\.($PLAYD_FILE_FORMATS)\$##" | $PAGER
 			fi
 		else
 			playd_warn "Default playlist doesn't exist."
