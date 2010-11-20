@@ -587,8 +587,9 @@ while [ $# -gt 0 ]; do
 			rm -f "$PLAYD_PLAYLIST.tmp"
 			playd_mk_playlist "$fileName"
 			[ $playd_append -eq 1 ] \
-				&& cat "$PLAYD_PLAYLIST.tmp" >> "$PLAYD_PLAYLIST" \
-				|| cp -f "$PLAYD_PLAYLIST.tmp" "$PLAYD_PLAYLIST"
+				&& sed -e 's#//#/#g' "$PLAYD_PLAYLIST.tmp" >> "$PLAYD_PLAYLIST" \
+				|| sed -e 's#//#/#g' "$PLAYD_PLAYLIST.tmp" > "$PLAYD_PLAYLIST"
+			rm -f "$PLAYD_PLAYLIST.tmp"
 			[ $NOPLAY -eq 0 ] && playd_put "loadlist '$PLAYD_PLAYLIST' $playd_append"
 			playd_append=1;
 		else
