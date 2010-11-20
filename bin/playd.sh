@@ -364,13 +364,13 @@ playd_mplayer_get() { # {{{1
 			rm -f "$CAT_LOCK"
 		fi
 
-		cat "$MPLAYER_PIPE" 2> /dev/null &
+		cat "$MPLAYER_PIPE" &
 		pid=$!
 		playd_put "$*"
 		sleep 1
 		kill $pid
 		playd_start_catnull
-	}
+	} 2> /dev/null | grep -v -E -e '^Terminated$' | sed -e "s/ANS_.*=//" -e "s/^'//" -e "s/'$//"
 } # 1}}}
 
 playd_current_file() { # {{{1
@@ -649,6 +649,12 @@ while [ $# -gt 0 ]; do
 
 	'conn' | '--conn' | 'connection' | '--connection' )
 		playd_current_conn
+		;;
+	
+	'info' | '--info' )
+		for i in 'album' 'artist' 'comment' 'genre' 'title' 'track' 'year'; do
+			echo "$i: `playd_mplayer_get "pausing_keep get_meta_$i"`"
+		done
 		;;
 
 	*'://'* )
