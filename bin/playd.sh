@@ -73,6 +73,8 @@ readonly CAT_LOCK="$PLAYD_HOME/cat.lock"
 readonly MPLAYER_CMD_GENERIC="$PLAYD_MPLAYER_USER_OPTIONS -quiet -idle -input file=$PLAYD_PIPE"
 readonly MPLAYER_CMD="mplayer $MPLAYER_CMD_GENERIC"
 readonly MPLAYER_SND_ONLY_CMD="mplayer -vo null $MPLAYER_CMD_GENERIC"
+NOVID=0
+NOPLAY=0
 
 playd_help() {	#{{{1
 	# print help
@@ -161,6 +163,7 @@ playd_start() {	# {{{1
 		[ $NOVID -eq 0 ] \
 			&& local mplayer_run_cmd="$MPLAYER_CMD" \
 			|| local mplayer_run_cmd="$MPLAYER_SND_ONLY_CMD"
+		sleep 1
 
 		#{ ${mplayer_run_cmd} > "$MPLAYER_PIPE" 2> /dev/null & } \
 		{ ${mplayer_run_cmd} > "$MPLAYER_PIPE" 2> /dev/null & } \
@@ -242,8 +245,8 @@ playd_fullpath() {	# {{{1
 	# echo full path of file/dir
 	# should be used as function
 	case "$1" in
-		/* ) echo "$1";;
-		* ) echo "`pwd`/$1";;
+	/* ) echo "$1";;
+	* ) echo "`pwd`/$1";;
 	esac
 }	# 1}}}
 
@@ -286,41 +289,41 @@ playd_import() {	# {{{1
 	# arg1 filename (with full path) to playlist
 	[ -f "$1" ] || return 1
 	case `echo "${1##*.}" | tr [A-Z] [a-z]` in
-		pls )
-			{ grep -i -e '^file' "$1" || playd_warn "Empty playlist. Skipping"; } | sed -e 's/file[0-9]*=//I' > "$PLAYD_PLAYLIST.tmp"
+	pls )
+		{ grep -i -e '^file' "$1" || playd_warn "Empty playlist. Skipping"; } | sed -e 's/file[0-9]*=//I' > "$PLAYD_PLAYLIST.tmp"
 		;;
 
-		ram )
-			grep -v -e '^.$' "$1" > "$PLAYD_PLAYLIST.tmp" || playd_warn "Empty playlist. Skipping"
+	ram )
+		grep -v -e '^.$' "$1" > "$PLAYD_PLAYLIST.tmp" || playd_warn "Empty playlist. Skipping"
 		;;
 
-		m3u|m3u8 )
-			 grep -v -E -e '^(.|#.*)$' "$1" > "$PLAYD_PLAYLIST.tmp" || playd_warn "Empty playlist. Skipping"
+	m3u|m3u8 )
+		 grep -v -E -e '^(.|#.*)$' "$1" > "$PLAYD_PLAYLIST.tmp" || playd_warn "Empty playlist. Skipping"
 		;;
 
-		asx|wax )
-			{ grep -i -E -e '<ref href=".*".?/>' "$1" || playd_warn "Empty playlist. Skipping"; } | sed -e 's/^.*href="//I' -e 's/".*$//' > "$PLAYD_PLAYLIST.tmp"
+	asx|wax )
+		{ grep -i -E -e '<ref href=".*".?/>' "$1" || playd_warn "Empty playlist. Skipping"; } | sed -e 's/^.*href="//I' -e 's/".*$//' > "$PLAYD_PLAYLIST.tmp"
 		;;
 
-		xspf )
-			{ grep -i -e '<location>.*</location>' "$1" || playd_warn "Empty playlist. Skipping"; } | sed -e 's#^.*<location>##I' -e 's#</location>.*$##I' -e 's#file://##I' > "$PLAYD_PLAYLIST.tmp"
+	xspf )
+		{ grep -i -e '<location>.*</location>' "$1" || playd_warn "Empty playlist. Skipping"; } | sed -e 's#^.*<location>##I' -e 's#</location>.*$##I' -e 's#file://##I' > "$PLAYD_PLAYLIST.tmp"
 		;;
 
-		plst )
-			cat "$1" > "$PLAYD_PLAYLIST.tmp"
+	plst )
+		cat "$1" > "$PLAYD_PLAYLIST.tmp"
 		;;
 
-		qtl )
-			{ grep -i -e 'src=".*"' || playd_warn "Empty playlist. Skipping"; } | sed -e 's/.*src="//I' -e 's/".*$//' > "$PLAYD_PLAYLIST.tmp"
+	qtl )
+		{ grep -i -e 'src=".*"' || playd_warn "Empty playlist. Skipping"; } | sed -e 's/.*src="//I' -e 's/".*$//' > "$PLAYD_PLAYLIST.tmp"
 		;;
 
-		wpl )
-			{ grep -i -E -e '<media src=".*".?/>' "$1" || playd_warn "Empty playlist. Skipping"; } | sed -e 's/^.*<media src="//I' -e 's/".*$//' > "$PLAYD_PLAYLIST.tmp"
+	wpl )
+		{ grep -i -E -e '<media src=".*".?/>' "$1" || playd_warn "Empty playlist. Skipping"; } | sed -e 's/^.*<media src="//I' -e 's/".*$//' > "$PLAYD_PLAYLIST.tmp"
 		;;
 
-		* )
-			playd_warn "Sorry `echo "${1##*.}" | tr [A-Z] [a-z]` is unsupported playlist type. Ignoring"
-			return 1
+	* )
+		playd_warn "Sorry `echo "${1##*.}" | tr [A-Z] [a-z]` is unsupported playlist type. Ignoring"
+		return 1
 		;;
 	esac
 
@@ -388,258 +391,261 @@ playd_append=$(playd_match "$1" 0 1 'append --append -a')
 # check command line arguments
 while [ $# -gt 0 ]; do
 	case "$1" in
-		'append' | '--append' | '-a' )
-			playd_warn "$1 should be 1st argument. Ignoring"
+	'append' | '--append' | '-a' )
+		playd_warn "$1 should be 1st argument. Ignoring"
 		;;
 
-		'help' | '--help' | '-h')
-			playd_help
+	'help' | '--help' | '-h')
+		playd_help
 		;;
 
-		'stop' | '--stop' | '-q')
-			playd_stop
+	'stop' | '--stop' | '-q')
+		playd_stop
 		;;
 
-		'start' | '--start' \
-		| 'restart' | '--restart' | '-R' )
-			[ $(playd_match "$1" '0' '1' 'restart --restart -R') ] && playd_stop
-			NOVID=$(playd_match "$2" '0' '1' 'novid --novid')
-			CONSOLE=$(playd_match "$2" '0' '1' 'console --console')
-			shift $(($NOVID + $CONSOLE))
-			playd_start $match1 $match2
+	'start' | '--start' \
+	| 'restart' | '--restart' | '-R' )
+		[ $(playd_match "$1" '0' '1' 'restart --restart -R') ] && playd_stop
+		NOVID=$(playd_match "$2" '0' '1' 'novid --novid')
+		shift $NOVID
+		playd_start $match1 $match2
 		;;
 
-		'cat' | '--cat' )
-			if [ -f "$PLAYD_PLAYLIST" ]; then
-				if [ "$OS" = 'FreeBSD' ]; then
-					sed -r -e 's#^.*/##' -e 's#_# #g' -E -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -E -e "s#\.($PLAYD_FILE_FORMATS)\$##" "$PLAYD_PLAYLIST" | awk '{ print NR "|\t" $0 }'
-				else
-					# assuming Linux
-					sed -r -e 's#^.*/##' -e 's#_# #g' -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -e "s#\.($PLAYD_FILE_FORMATS)\$##" "$PLAYD_PLAYLIST" | awk '{ print NR "|\t" $0 }' 
-				fi
+	'cat' | '--cat' )
+		if [ -f "$PLAYD_PLAYLIST" ]; then
+			if [ "$OS" = 'FreeBSD' ]; then
+				sed -r -e 's#^.*/##' -e 's#_# #g' -E -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -E -e "s#\.($PLAYD_FILE_FORMATS)\$##" "$PLAYD_PLAYLIST" | awk '{ print NR "|\t" $0 }'
 			else
-				playd_warn "Default playlist doesn't exist."
+				# assuming Linux
+				sed -r -e 's#^.*/##' -e 's#_# #g' -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -e "s#\.($PLAYD_FILE_FORMATS)\$##" "$PLAYD_PLAYLIST" | awk '{ print NR "|\t" $0 }' 
 			fi
+		else
+			playd_warn "Default playlist doesn't exist."
+		fi
 
 		;;
 
-		'--longcat' | 'longcat' | 'lcat' | '--lcat' )
-			[ -f "$PLAYD_PLAYLIST" ] \
-				&& awk '{ print NR "|\t" $0 }' "$PLAYD_PLAYLIST" \
-				|| playd_warn "Default playlist doesn't exist."
+	'--longcat' | 'longcat' | 'lcat' | '--lcat' )
+		[ -f "$PLAYD_PLAYLIST" ] \
+			&& awk '{ print NR "|\t" $0 }' "$PLAYD_PLAYLIST" \
+			|| playd_warn "Default playlist doesn't exist."
 		;;
 
-		'list' | '--list' | '-l' )
-			if [ -f "$PLAYD_PLAYLIST" ]; then
-				if [ "$OS" = 'FreeBSD' ]; then
-					sed -r -e 's#^.*/##' -e 's#_# #g' -E -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -E -e "s#\.($PLAYD_FILE_FORMATS)\$##" "$PLAYD_PLAYLIST" | awk '{ print NR "|\t" $0 }' | $PAGER
-				else
-					# assuming Linux
-					sed -r -e 's#^.*/##' -e 's#_# #g' -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -e "s#\.($PLAYD_FILE_FORMATS)\$##" "$PLAYD_PLAYLIST" | awk '{ print NR "|\t" $0 }' | $PAGER
-				fi
+	'list' | '--list' | '-l' )
+		if [ -f "$PLAYD_PLAYLIST" ]; then
+			if [ "$OS" = 'FreeBSD' ]; then
+				sed -r -e 's#^.*/##' -e 's#_# #g' -E -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -E -e "s#\.($PLAYD_FILE_FORMATS)\$##" "$PLAYD_PLAYLIST" | awk '{ print NR "|\t" $0 }' | $PAGER
 			else
-				playd_warn "Default playlist doesn't exist."
+				# assuming Linux
+				sed -r -e 's#^.*/##' -e 's#_# #g' -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -e "s#\.($PLAYD_FILE_FORMATS)\$##" "$PLAYD_PLAYLIST" | awk '{ print NR "|\t" $0 }' | $PAGER
 			fi
+		else
+			playd_warn "Default playlist doesn't exist."
+		fi
 
 		;;
 
-		'--longlist' | 'longlist' | 'llist' | '--llist' | '-L' )
-			[ -f "$PLAYD_PLAYLIST" ] \
-				&& awk '{ print NR "|\t" $0 }' "$PLAYD_PLAYLIST" | $PAGER \
-				|| playd_warn "Default playlist doesn't exist."
+	'--longlist' | 'longlist' | 'llist' | '--llist' | '-L' )
+		[ -f "$PLAYD_PLAYLIST" ] \
+			&& awk '{ print NR "|\t" $0 }' "$PLAYD_PLAYLIST" | $PAGER \
+			|| playd_warn "Default playlist doesn't exist."
 		;;
 
-		# seems buggy
-		# I think there's mplayer bug
-		# after using playd next or playd seek, playd play doesn't work well (if at all)
-		'play' | '--play' | '-p' )
-			if [ $2 ]; then
-				if [ $2 -ne 0 ]; then
-					while [ -n "$2" ]; do
-						[ $2 -gt 0 ] \
-							&& { playd_put `awk '{ if (NR == '$2' ) item = $0 } END { print "loadfile " "\""item"\" '$playd_append'" }' "$PLAYD_PLAYLIST"`; shift; playd_append=1; } \
-							|| break
-					done
-				else
-					playd_warn "$1 needs numeric argument. Ignoring"
-				fi
+	# seems buggy
+	# I think there's mplayer bug
+	# after using playd next or playd seek, playd play doesn't work well (if at all)
+	'play' | '--play' | '-p' )
+		if [ $2 ]; then
+			if [ $2 -ne 0 ]; then
+				while [ -n "$2" ]; do
+					[ $2 -gt 0 ] \
+						&& { playd_put `awk '{ if (NR == '$2' ) item = $0 } END { print "loadfile " "\""item"\" '$playd_append'" }' "$PLAYD_PLAYLIST"`; shift; playd_append=1; } \
+						|| break
+				done
 			else
 				playd_warn "$1 needs numeric argument. Ignoring"
 			fi
+		else
+			playd_warn "$1 needs numeric argument. Ignoring"
+		fi
 		;;
 
-		'playlist' | '--playlist' | '-P' )
-			if [ -f "$PLAYD_PLAYLIST" ]; then
-				playd_put "loadlist '$PLAYD_PLAYLIST' $playd_append"
-				playd_append=1
-			else
-				playd_warn "Default playlist doesn't exist."
+	'playlist' | '--playlist' | '-P' )
+		if [ -f "$PLAYD_PLAYLIST" ]; then
+			playd_put "loadlist '$PLAYD_PLAYLIST' $playd_append"
+			playd_append=1
+		else
+			playd_warn "Default playlist doesn't exist."
+		fi
+		;;
+
+	'rmlist' | '--rmlist' )
+		rm -f "$PLAYD_PLAYLIST"
+		;;
+
+	'seek' | '--seek' | '-s' )
+		if [ $2 ]; then
+			match=$(playd_match "$3" 0 2 'abs --absolute absolute' 1 '% --percent percent')
+			playd_put "seek `playd_time2s $2` $match"
+			[ $match -ne 0 ] && shift
+			shift
+		else
+			playd_warn "$1 needs numeric argument. Ignoring"
+		fi
+		;;
+
+	'next' | '--next' | '-n' )
+		playd_put "seek 100 1"
+		;;
+
+	'status' | '--status' )
+		playd_check \
+			&& echo 'playd is not running' \
+			|| echo "playd is running. PID: $?"
+		;;
+
+	'cd' | 'cdda' | '--cd' | '-c' \
+	| 'dvd' | '--dvd' | '-d' )
+		media=$(playd_match $1 '0' 'cdda://' 'cd cdda --cd -c' 'dvdnav://' 'dvd --dvd -d')
+		if [ $2 ]; then
+			if [ $2 -gt 0 ]; then
+				while [ $2 ]; do
+					[ $2 -gt 0 ] \
+						&& { playd_playlist_add "${media}$2"; shift; } \
+						|| break
+				done
 			fi
+		else
+			playd_playlist_add "$media"
+		fi
 		;;
 
-		'rmlist' | '--rmlist' )
-			rm -f "$PLAYD_PLAYLIST"
+	'cmd' | '--cmd' )
+		[ -n "$2" ] \
+			&& { playd_put "$2"; shift; } \
+			|| playd_warn "$1 needs argument to pass to mplayer. Ignoring"
 		;;
 
-		'seek' | '--seek' | '-s' )
-			if [ $2 ]; then
-				match=$(playd_match "$3" 0 2 'abs --absolute absolute' 1 '% --percent percent')
-				playd_put "seek `playd_time2s $2` $match"
-				[ $match -ne 0 ] && shift
-				shift
-			else
-				playd_warn "$1 needs numeric argument. Ignoring"
-			fi
+	'nocheck' | '--nocheck' )
+		[ -f "$2" ] \
+			&& { playd_playlist_add "$(playd_fullpath "$2")"; shift; } \
+			|| playd_warn "\"$2\" directory. Skipping"
 		;;
 
-		'next' | '--next' | '-n' )
-			playd_put "seek 100 1"
+	'--subtitles' | 'subtitles' | '--subs' | 'subs' | '-S' )
+		[ -f "$2" ] \
+			&& { playd_put "sub_load '$2'"; shift; } \
+			|| playd_warn "\"$2\" isn't subtitle file. Skipping"
 		;;
 
-		'status' | '--status' )
-			playd_check \
-				&& echo 'playd is not running' \
-				|| echo "playd is running. PID: $?"
-		;;
-
-		'cd' | 'cdda' | '--cd' | '-c' \
-		| 'dvd' | '--dvd' | '-d' )
-			media=$(playd_match $1 '0' 'cdda://' 'cd cdda --cd -c' 'dvdnav://' 'dvd --dvd -d')
-			if [ $2 ]; then
-				if [ $2 -gt 0 ]; then
-					while [ $2 ]; do
-						[ $2 -gt 0 ] \
-							&& { playd_playlist_add "${media}$2"; shift; } \
-							|| break
-					done
-				fi
-			else
-				playd_playlist_add "$media"
-			fi
-		;;
-
-		'cmd' | '--cmd' )
-			[ -n "$2" ] \
-				&& { playd_put "$2"; shift; } \
-				|| playd_warn "$1 needs argument to pass to mplayer. Ignoring"
-		;;
-
-		'nocheck' | '--nocheck' )
-			[ -f "$2" ] \
-				&& { playd_playlist_add "$(playd_fullpath "$2")"; shift; } \
-				|| playd_warn "\"$2\" directory. Skipping"
-		;;
-
-		'--subtitles' | 'subtitles' | '--subs' | 'subs' | '-S' )
-			[ -f "$2" ] \
-				&& { playd_put "sub_load '$2'"; shift; } \
-				|| playd_warn "\"$2\" isn't subtitle file. Skipping"
-		;;
-
-		'brightness' | '--brightness' \
-		| 'contrast' | '--contrast' \
-		| 'gamma' | '--gamma' \
-		| 'hue' | '--hue' \
-		| 'saturation' | '--saturation' \
-		| 'volume' | '--volume' | 'vol' | '-V' | '--vol' \
-		| '--audio-delay' | 'audio-delay' )
-			if [ -n $2 ]; then
-				match=$(playd_match "$3" 0 1 'abs --absolute absolute')
-				playd_put "$(playd_match "$1" "$1" \
-					'volume' 'vol -V --vol volume --volume' \
-					'audio_delay' '--audio-delay audio-delay') \
-					$2 $match"
-				shift $((1 + $match))
-			else
-				playd_warn "$1 needs at least numeric argument. Ignoring"
-			fi
-		;;
-
-		'mute' | '--mute' | '-m' \
-		| 'pause' | '--pause' | '-z' \
-		| '--switch-audio' | 'switch-audio' | '--sw-audio' | 'sw-audio' \
-		| '--switch-subtitles' | 'switch-subtitles' | '--sw-subs' | 'sw-subs' )
+	'brightness' | '--brightness' \
+	| 'contrast' | '--contrast' \
+	| 'gamma' | '--gamma' \
+	| 'hue' | '--hue' \
+	| 'saturation' | '--saturation' \
+	| 'volume' | '--volume' | 'vol' | '-V' | '--vol' \
+	| '--audio-delay' | 'audio-delay' )
+		if [ -n $2 ]; then
+			match=$(playd_match "$3" 0 1 'abs --absolute absolute')
 			playd_put "$(playd_match "$1" "$1" \
-				'mute' 'mute --mute -m' \
-				'pause' 'pause --pause -z' \
-				'switch_audio' '--switch-audio switch-track --sw-audio sw-audio' \
-				'sub_select' '--switch-subtitles switch-subtitles --sw-subs sw-subs')"
+				'volume' 'vol -V --vol volume --volume' \
+				'audio_delay' '--audio-delay audio-delay') \
+				$2 $match"
+			shift $((1 + $match))
+		else
+			playd_warn "$1 needs at least numeric argument. Ignoring"
+		fi
 		;;
 
-		'rnd' | '--rnd' | '--randomise' | 'randomise' )
-			playd_randomise
+	'mute' | '--mute' | '-m' \
+	| 'pause' | '--pause' | '-z' \
+	| '--switch-audio' | 'switch-audio' | '--sw-audio' | 'sw-audio' \
+	| '--switch-subtitles' | 'switch-subtitles' | '--sw-subs' | 'sw-subs' )
+		playd_put "$(playd_match "$1" "$1" \
+			'mute' 'mute --mute -m' \
+			'pause' 'pause --pause -z' \
+			'switch_audio' '--switch-audio switch-track --sw-audio sw-audio' \
+			'sub_select' '--switch-subtitles switch-subtitles --sw-subs sw-subs')"
 		;;
 
-		'get' | '--get')
-			case "$2" in
-				'album' | 'artist' | 'comment' | 'genre' | 'title' | 'track' | 'year' )
-					playd_mplayer_get "pausing_keep get_meta_$2"
-				;;
+	'rnd' | '--rnd' | '--randomise' | 'randomise' )
+		playd_randomise
+		;; 
 
-				'name' )
-					playd_mplayer_get "pausing_keep get_file_$2"
-				;;
-
-				'audio_bitrate' | 'audio_codec' | 'audio_samples' )
-					playd_mplayer_get "pausing_keep get_$2"
-				;;
-
-				'samples' )
-					playd_mplayer_get "pausing_keep get_audio_$2"
-				;;
-
-				'sub_visibility' )
-					playd_mplayer_get "pausing_keep get_$2"
-				;;
-
-				'length' | 'pos' )
-					playd_mplayer_get "pausing_keep get_time_$2"
-				;;
-
-				'fullscreen' )
-					playd_mplayer_get "pausing_keep get_vo_$2"
-				;;
-
-				'video_bitrate' | 'video_codec' )
-					playd_mplayer_get "pausing_keep get_$2"
-				;;
-
-				'resolution' )
-					playd_mplayer_get "pausing_keep get_video_$2"
-				;;
-
-				* )
-					playd_mplayer_get "pausing_keep get_property $2"
-				;;
-			esac
-			shift 2
+	'noplay' | '--noplay' )
+		NOPLAY=1
 		;;
 
-		*'://'* )
-			playd_playlist_add "$1"
+	'get' | '--get')
+		case "$2" in
+		'album' | 'artist' | 'comment' | 'genre' | 'title' | 'track' | 'year' )
+			playd_mplayer_get "pausing_keep get_meta_$2"
+			;;
+
+		'name' )
+			playd_mplayer_get "pausing_keep get_file_$2"
+			;;
+
+		'audio_bitrate' | 'audio_codec' | 'audio_samples' )
+			playd_mplayer_get "pausing_keep get_$2"
+			;;
+
+		'samples' )
+			playd_mplayer_get "pausing_keep get_audio_$2"
+			;;
+
+		'sub_visibility' )
+			playd_mplayer_get "pausing_keep get_$2"
+			;;
+
+		'length' | 'pos' )
+			playd_mplayer_get "pausing_keep get_time_$2"
+			;;
+
+		'fullscreen' )
+			playd_mplayer_get "pausing_keep get_vo_$2"
+			;;
+
+		'video_bitrate' | 'video_codec' )
+			playd_mplayer_get "pausing_keep get_$2"
+			;;
+
+		'resolution' )
+			playd_mplayer_get "pausing_keep get_video_$2"
+			;;
+
+		* )
+			playd_mplayer_get "pausing_keep get_property $2"
+			;;
+		esac
+		shift 2
 		;;
 
-		'file' | '--file' | '-f' | * )
-			[ $(playd_match "$1" 0 1 'file --file -f') -eq 1 ] && shift
-			fileName=$(playd_fullpath "$1")
+	*'://'* )
+		playd_playlist_add "$1"
+		;;
 
-			if [ -f "$fileName" ]; then
-				echo "${1##*.}" | grep -q -i -E -e "^(${PLAYD_FILE_FORMATS})$" \
-					&& playd_playlist_add "$fileName" \
-					|| { file -ib "$fileName" | grep -q -E -e '^(audio|video)' && playd_playlist_add "$fileName"; } \
-					|| { echo "${1##*.}" | grep -q -i -E -e "^($PLAYD_PLAYLIST_FORMATS)$" && playd_import "$fileName"; } \
-					|| playd_warn "\"$fileName\" doesn't seam to be valid file for playback. Ignoring" "to override use:" "  playd --nocheck $fileName"
-			elif [ -d "$fileName" ]; then
-				rm -f "$PLAYD_PLAYLIST.tmp"
-				playd_mk_playlist "$fileName"
-				[ $playd_append -eq 1 ] \
-					&& cat "$PLAYD_PLAYLIST.tmp" >> "$PLAYD_PLAYLIST" \
-					|| cp -f "$PLAYD_PLAYLIST.tmp" "$PLAYD_PLAYLIST"
-				playd_put "loadlist '$PLAYD_PLAYLIST' $playd_append"
-				playd_append=1;
-			else
-				playd_warn "\"$fileName\" doesn't seam to be valid file for playback. Ignoring" 'to override use:' "  playd --nocheck $fileName"
-			fi
+	'file' | '--file' | '-f' | * )
+		[ $(playd_match "$1" 0 1 'file --file -f') -eq 1 ] && shift
+		fileName=$(playd_fullpath "$1")
+
+		if [ -f "$fileName" ]; then
+			echo "${1##*.}" | grep -q -i -E -e "^(${PLAYD_FILE_FORMATS})$" \
+				&& playd_playlist_add "$fileName" \
+				|| { file -ib "$fileName" | grep -q -E -e '^(audio|video)' && playd_playlist_add "$fileName"; } \
+				|| { echo "${1##*.}" | grep -q -i -E -e "^($PLAYD_PLAYLIST_FORMATS)$" && playd_import "$fileName"; } \
+				|| playd_warn "\"$fileName\" doesn't seam to be valid file for playback. Ignoring" "to override use:" "  playd --nocheck $fileName"
+		elif [ -d "$fileName" ]; then
+			rm -f "$PLAYD_PLAYLIST.tmp"
+			playd_mk_playlist "$fileName"
+			[ $playd_append -eq 1 ] \
+				&& cat "$PLAYD_PLAYLIST.tmp" >> "$PLAYD_PLAYLIST" \
+				|| cp -f "$PLAYD_PLAYLIST.tmp" "$PLAYD_PLAYLIST"
+			[ $NOPLAY -eq 0 ] && playd_put "loadlist '$PLAYD_PLAYLIST' $playd_append"
+			playd_append=1;
+		else
+			playd_warn "\"$fileName\" doesn't seam to be valid file for playback. Ignoring" 'to override use:' "  playd --nocheck $fileName"
+		fi
 		;;
 
 	esac
