@@ -448,7 +448,6 @@ while [ $# -gt 0 ]; do
 
 	'--longcat' | 'longcat' | 'lcat' | '--lcat' )
 		if [ -f "$PLAYD_PLAYLIST" ]; then
-			current_file="`playd_current_file | sed -e 's#/#\\\/#g' -e 's#\.#\\\.#g'`"
 			awk '/^'"`playd_current_file_escaped`"'$/ { print NR"|* " $0; next } /.*/ { print NR "|  " $0 }'  "$PLAYD_PLAYLIST"
 		else
 			playd_warn "Default playlist doesn't exist."
@@ -457,7 +456,6 @@ while [ $# -gt 0 ]; do
 
 	'list' | '--list' | '-l' )
 		if [ -f "$PLAYD_PLAYLIST" ]; then
-#			current_file="`playd_current_file | sed -e 's#/#\\\/#g' -e 's#\.#\\\.#g'`"
 			if [ "$OS" = 'FreeBSD' ]; then
 				awk '/^'"`playd_current_file_escaped`"'$/ { print NR"|* " $0; next } /.*/ { print NR "|  " $0 }'  "$PLAYD_PLAYLIST" | sed -r -e 's#/.*/##' -e 's#_# #g' -E -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -E -e "s#\.($PLAYD_FILE_FORMATS)\$##" | $PAGER
 			else
@@ -472,7 +470,6 @@ while [ $# -gt 0 ]; do
 
 	'--longlist' | 'longlist' | 'llist' | '--llist' | '-L' )
 		if [ -f "$PLAYD_PLAYLIST" ]; then 
-			current_file="`playd_current_file | sed -e 's#/#\\\/#g' -e 's#\.#\\\.#g'`"
 			awk '/^'"`playd_current_file_escaped`"'$/ { print NR"|* " $0; next } /.*/ { print NR "|  " $0 }'  "$PLAYD_PLAYLIST" | $PAGER
 		else
 			playd_warn "Default playlist doesn't exist."
