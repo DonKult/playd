@@ -63,10 +63,8 @@ readonly OS=`uname`
 
 readonly PLAYD_HOME="${XDG_CONFIG_HOME:-"$HOME/.config"}/playd"
 readonly PLAYD_PIPE="$PLAYD_HOME/playd.fifo"
-readonly MPLAYER_PIPE="$PLAYD_HOME/mplayer.fifo"
 readonly PLAYD_PLAYLIST="$PLAYD_HOME/playlist.plst"
 readonly PLAYD_LOCK="$PLAYD_HOME/mplayer.lock"
-readonly CAT_LOCK="$PLAYD_HOME/cat.lock"
 
 # to customise mplayers command line set PLAYD_MPLAYER_USER_OPTIONS environment variable
 #readonly MPLAYER_CMD_GENERIC="$PLAYD_MPLAYER_USER_OPTIONS -really-quiet -idle -input file=$PLAYD_PIPE"
@@ -149,7 +147,7 @@ playd_check() {	# {{{1
 playd_clean() {	#{{{1
 	# clean files after playd
 	rm -f "$PLAYD_PLAYLIST.tmp"
-	playd_check && rm -f "$PLAYD_PIPE" "$PLAYD_LOCK" "$MPLAYER_PIPE" "$CAT_LOCK"
+	playd_check && rm -f "$PLAYD_PIPE" "$PLAYD_LOCK"
 }	# 1}}}
 
 playd_start() {	# {{{1
@@ -158,17 +156,15 @@ playd_start() {	# {{{1
 	# console novid (order doesn't matter)
 	playd_check && {
 		[ -p "$PLAYD_PIPE" ] || { mkfifo "$PLAYD_PIPE" || playd_die "Can't create \"$PLAYD_PIPE\""; }
-		[ -p "$MPLAYER_PIPE" ] || { mkfifo "$MPLAYER_PIPE" || playd_die "Can't create \"$MPLAYER_PIPE\""; }
 		cd /
 		[ $NOVID -eq 0 ] \
 			&& local mplayer_run_cmd="$MPLAYER_CMD" \
 			|| local mplayer_run_cmd="$MPLAYER_SND_ONLY_CMD"
 
-		{ ${mplayer_run_cmd} > "$MPLAYER_PIPE" 2> /dev/null & } \
+		{ ${mplayer_run_cmd} > /dev/null 2> /dev/null & } \
 			&& echo "$$" > "$PLAYD_LOCK" \
 			|| playd_die 'Failed to start mplayer'
 		cd - > /dev/null 2> /dev/null
-		playd_start_catnull
 	}
 }	# 1}}}
 
@@ -338,39 +334,6 @@ playd_time2s() { # {{{1
 	# convert human readable time to seconds
 	# arg1 time in human readable form (for example 2m30s)
 	echo "$1" | sed -e 's/y/*31536000+/' -e 's/M/*2592000+/' -e 's/w/*604800+/' -e 's/d/*86400+/' -e 's/h/*3600+/' -e 's/m/*60+/' -e 's/s//' -e 's/\+$//' | bc -l
-} # 1}}}
-
-playd_start_catnull() { # {{{1
-	# Start cat process, that will clear mplayers output pipe
-	cd /
-	cat "$MPLAYER_PIPE" > /dev/null &
-	echo "$!" > "$CAT_LOCK"
-	cd - > /dev/null 2> /dev/null
-} # 1}}}
-
-playd_catnull_check() { # {{{1
-	# get pid of cat process that is clearing mplayers output pipe
-	[ -f "$CAT_LOCK" ] \
-		&& local pid=$(pgrep -F "$CAT_LOCK") \
-		&& return $pid
-	return 0
-} # 1}}}
-
-playd_mplayer_get() { # {{{1
-	# get info from mplayer...
-	playd_check || {
-		if [ -f "$CAT_LOCK" ]; then
-			pkill -F "$CAT_LOCK"
-			rm -f "$CAT_LOCK"
-		fi
-
-		cat "$MPLAYER_PIPE" &
-		pid=$!
-		playd_put "$*"
-		sleep 1
-		kill $pid
-		playd_start_catnull
-	} 2> /dev/null | grep -v -E -e '^Terminated$' | sed -e "s/ANS_.*=//" -e "s/^'//" -e "s/'$//"
 } # 1}}}
 
 playd_current_file() { # {{{1
@@ -598,51 +561,6 @@ while [ $# -gt 0 ]; do
 		NOPLAY=1
 		;;
 
-	'get' | '--get')
-		case "$2" in
-		'album' | 'artist' | 'comment' | 'genre' | 'title' | 'track' | 'year' )
-			playd_mplayer_get "pausing_keep get_meta_$2"
-			;;
-
-		'name' )
-			playd_mplayer_get "pausing_keep get_file_$2"
-			;;
-
-		'audio_bitrate' | 'audio_codec' | 'audio_samples' )
-			playd_mplayer_get "pausing_keep get_$2"
-			;;
-
-		'samples' )
-			playd_mplayer_get "pausing_keep get_audio_$2"
-			;;
-
-		'sub_visibility' )
-			playd_mplayer_get "pausing_keep get_$2"
-			;;
-
-		'length' | 'pos' )
-			playd_mplayer_get "pausing_keep get_time_$2"
-			;;
-
-		'fullscreen' )
-			playd_mplayer_get "pausing_keep get_vo_$2"
-			;;
-
-		'video_bitrate' | 'video_codec' )
-			playd_mplayer_get "pausing_keep get_$2"
-			;;
-
-		'resolution' )
-			playd_mplayer_get "pausing_keep get_video_$2"
-			;;
-
-		* )
-			playd_mplayer_get "pausing_keep get_property $2"
-			;;
-		esac
-		shift 2
-		;;
-	
 	'filename' | '--filename' | 'fname' | '--fname' )
 		playd_current_file
 		;;
@@ -651,12 +569,6 @@ while [ $# -gt 0 ]; do
 		playd_current_conn
 		;;
 	
-	'info' | '--info' )
-		for i in 'album' 'artist' 'comment' 'genre' 'title' 'track' 'year'; do
-			echo "$i: `playd_mplayer_get "pausing_keep get_meta_$i"`"
-		done
-		;;
-
 	*'://'* )
 		playd_playlist_add "$1"
 		;;
