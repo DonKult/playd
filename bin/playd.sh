@@ -391,7 +391,7 @@ playd_current_conn() { # {{{1
 playd_current_file_escaped() { # {{{1
 	# prints current file name, that mplayer is playing.
 	# this function prepares string for awk (adds escape sequences)
-	playd_current_file | sed -e 's#/#\\\/#g' -e 's#\.#\\\.#g' -e 's#\[#\\\[#g' -e 's#\]#\\\]#g' -e 's#)#\\\)#g' -e 's#(#\\\(#g'
+	playd_current_file | sed -e 's#/#\\\/#g' -e 's#\.#\\\.#g' -e 's#\[#\\\[#g' -e 's#\]#\\\]#g' -e 's#)#\\\)#g' -e 's#(#\\\(#g' -e 's#\*#\\\*#g' -e 's#{#\\\{#g' -e 's#}#\\\}#g'
 } # 1}}}
 
 # checking for mplayer
