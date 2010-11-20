@@ -34,7 +34,7 @@
 # project email: playd@bsdroot.lv
 # 1}}}
 
-readonly PLAYD_VERSION='1.9.10'
+readonly PLAYD_VERSION='1.10.0'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -284,7 +284,8 @@ playd_import() {	# {{{1
 	[ -f "$1" ] || return 1
 	case `echo "${1##*.}" | tr [A-Z] [a-z]` in
 	pls )
-		{ grep -i -e '^file' "$1" || playd_warn "Empty playlist. Skipping"; } | sed -e 's/file[0-9]*=//I' > "$PLAYD_PLAYLIST.tmp"
+		{ grep -i -e '^file' "$1" || playd_warn "Empty playlist. Skipping"; } \
+			| sed -e 's/file[0-9]*=//I' > "$PLAYD_PLAYLIST.tmp"
 		;;
 
 	ram )
@@ -296,11 +297,13 @@ playd_import() {	# {{{1
 		;;
 
 	asx|wax )
-		{ grep -i -E -e '<ref href=".*".?/>' "$1" || playd_warn "Empty playlist. Skipping"; } | sed -e 's/^.*href="//I' -e 's/".*$//' > "$PLAYD_PLAYLIST.tmp"
+		{ grep -i -E -e '<ref href=".*".?/>' "$1" || playd_warn "Empty playlist. Skipping"; } \
+			| sed -e 's/^.*href="//I' -e 's/".*$//' > "$PLAYD_PLAYLIST.tmp"
 		;;
 
 	xspf )
-		{ grep -i -e '<location>.*</location>' "$1" || playd_warn "Empty playlist. Skipping"; } | sed -e 's#^.*<location>##I' -e 's#</location>.*$##I' -e 's#file://##I' > "$PLAYD_PLAYLIST.tmp"
+		{ grep -i -e '<location>.*</location>' "$1" || playd_warn "Empty playlist. Skipping"; } \
+			| sed -e 's#^.*<location>##I' -e 's#</location>.*$##I' -e 's#file://##I' > "$PLAYD_PLAYLIST.tmp"
 		;;
 
 	plst )
@@ -308,11 +311,13 @@ playd_import() {	# {{{1
 		;;
 
 	qtl )
-		{ grep -i -e 'src=".*"' || playd_warn "Empty playlist. Skipping"; } | sed -e 's/.*src="//I' -e 's/".*$//' > "$PLAYD_PLAYLIST.tmp"
+		{ grep -i -e 'src=".*"' || playd_warn "Empty playlist. Skipping"; } \
+			| sed -e 's/.*src="//I' -e 's/".*$//' > "$PLAYD_PLAYLIST.tmp"
 		;;
 
 	wpl )
-		{ grep -i -E -e '<media src=".*".?/>' "$1" || playd_warn "Empty playlist. Skipping"; } | sed -e 's/^.*<media src="//I' -e 's/".*$//' > "$PLAYD_PLAYLIST.tmp"
+		{ grep -i -E -e '<media src=".*".?/>' "$1" || playd_warn "Empty playlist. Skipping"; } \
+			| sed -e 's/^.*<media src="//I' -e 's/".*$//' > "$PLAYD_PLAYLIST.tmp"
 		;;
 
 	* )
@@ -354,7 +359,8 @@ playd_current_conn() { # {{{1
 playd_current_file_escaped() { # {{{1
 	# prints current file name, that mplayer is playing.
 	# this function prepares string for awk (adds escape sequences)
-	playd_current_file | sed -e 's#/#\\\/#g' -e 's#\.#\\\.#g' -e 's#\[#\\\[#g' -e 's#\]#\\\]#g' -e 's#)#\\\)#g' -e 's#(#\\\(#g' -e 's#\*#\\\*#g' -e 's#{#\\\{#g' -e 's#}#\\\}#g'
+	playd_current_file | sed -e 's#/#\\\/#g' -e 's#\.#\\\.#g' -e 's#\[#\\\[#g' -e 's#\]#\\\]#g' \
+		-e 's#)#\\\)#g' -e 's#(#\\\(#g' -e 's#\*#\\\*#g' -e 's#{#\\\{#g' -e 's#}#\\\}#g'
 } # 1}}}
 
 playd_cat_playlist() { # {{{1
