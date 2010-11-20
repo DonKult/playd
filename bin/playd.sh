@@ -364,7 +364,7 @@ playd_mplayer_get() { # {{{1
 			rm -f "$CAT_LOCK"
 		fi
 
-		cat "$MPLAYER_PIPE" &
+		cat "$MPLAYER_PIPE" 2> /dev/null &
 		pid=$!
 		playd_put "$*"
 		sleep 1
