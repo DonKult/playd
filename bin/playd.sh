@@ -388,14 +388,11 @@ playd_current_conn() { # {{{1
 	[ $pid -ne 0 ] && procstat -f $pid | grep -e ' 4 s - rw------' | awk '{print $9" "$11" -> "$10}'
 } # 1}}}
 
-playd_current_file_escaped() {
+playd_current_file_escaped() { # {{{1
 	# prints current file name, that mplayer is playing.
 	# this function prepares string for awk (adds escape sequences)
-	playd_current_file | sed -e 's#/#\\\/#g' -e 's#\.#\\\.#g' -e 's#\[#\\\[#g' -e 's#\]#\\\]#g' # -e 's#\)#\\\)#g' -e 's#\(#\\\(#g'
-}
-#playd_current_file
-#playd_current_file_escaped
-#exit
+	playd_current_file | sed -e 's#/#\\\/#g' -e 's#\.#\\\.#g' -e 's#\[#\\\[#g' -e 's#\]#\\\]#g' -e 's#)#\\\)#g' -e 's#(#\\\(#g'
+} # 1}}}
 
 # checking for mplayer
 [ "$(which mplayer)" ] || playd_die 'mplayer not found'
