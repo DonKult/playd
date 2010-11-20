@@ -357,6 +357,45 @@ playd_current_file_escaped() { # {{{1
 	playd_current_file | sed -e 's#/#\\\/#g' -e 's#\.#\\\.#g' -e 's#\[#\\\[#g' -e 's#\]#\\\]#g' -e 's#)#\\\)#g' -e 's#(#\\\(#g' -e 's#\*#\\\*#g' -e 's#{#\\\{#g' -e 's#}#\\\}#g'
 } # 1}}}
 
+playd_cat_playlist() { # {{{1
+	if [ -f "$PLAYD_PLAYLIST" ]; then
+		if [ "$OS" = 'FreeBSD' ]; then
+			awk '/^'"`playd_current_file_escaped`"'$/ { print NR"|* "$0; next } /.*/ { print NR"|  "$0 }'  "$PLAYD_PLAYLIST" \
+				| sed -r \
+					-e 's#/.*/##' \
+					-e 's#_# #g' \
+					-e 's#^[ ]*##' \
+					-e 's# ?- ?[0-9]{1,2} ?- ?# - #' \
+					-e 's#-[0-9]{2}\.# - #' \
+					-E -e "s#\.($PLAYD_FILE_FORMATS)\$##" \
+					-E -e 's#\|  (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|  #' \
+					-E -e 's#\|\* (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|* #'
+		else
+			# assuming Linux
+			awk '/^'"`playd_current_file_escaped`"'$/ { print NR"|* "$0; next } /.*/ { print NR"|  "$0 }'  "$PLAYD_PLAYLIST" \
+				| sed -r \
+					-e 's#/.*/##' \
+					-e 's#_# #g' \
+					-e 's#^[ ]*##' \
+					-e 's# ?- ?[0-9]{1,2} ?- ?# - #' \
+					-e 's#-[0-9]{2}\.# - #' \
+					-e "s#\.($PLAYD_FILE_FORMATS)\$##" \
+					-e 's#\|  (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|  #' \
+					-e 's#\|\* (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|* #'
+		fi
+	else
+		playd_warn "Default playlist doesn't exist."
+	fi
+} # 1}}}
+
+playd_longcat_playlist() { # {{{1
+	if [ -f "$PLAYD_PLAYLIST" ]; then
+		awk '/^'"`playd_current_file_escaped`"'$/ { print NR"|* " $0; next } /.*/ { print NR "|  " $0 }'  "$PLAYD_PLAYLIST"
+	else
+		playd_warn "Default playlist doesn't exist."
+	fi
+} # 1}}}
+
 # checking for mplayer
 [ "$(which mplayer)" ] || playd_die 'mplayer not found'
 
@@ -393,47 +432,19 @@ while [ $# -gt 0 ]; do
 		;;
 
 	'cat' | '--cat' )
-		if [ -f "$PLAYD_PLAYLIST" ]; then
-			if [ "$OS" = 'FreeBSD' ]; then
-				awk '/^'"`playd_current_file_escaped`"'$/ { print NR"|* " $0; next } /.*/ { print NR "|  " $0 }'  "$PLAYD_PLAYLIST" | sed -r -e 's#/.*/##' -e 's#_# #g' -E -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -E -e "s#\.($PLAYD_FILE_FORMATS)\$##"
-			else
-				# assuming Linux
-				awk '/^'"`playd_current_file_escaped`"'$/ { print NR"|* " $0; next } /.*/ { print NR "|  " $0 }'  "$PLAYD_PLAYLIST" | sed -r -e 's#/.*/##' -e 's#_# #g' -E -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -e "s#\.($PLAYD_FILE_FORMATS)\$##"
-			fi
-		else
-			playd_warn "Default playlist doesn't exist."
-		fi
-
+		playd_cat_playlist
 		;;
 
 	'--longcat' | 'longcat' | 'lcat' | '--lcat' )
-		if [ -f "$PLAYD_PLAYLIST" ]; then
-			awk '/^'"`playd_current_file_escaped`"'$/ { print NR"|* " $0; next } /.*/ { print NR "|  " $0 }'  "$PLAYD_PLAYLIST"
-		else
-			playd_warn "Default playlist doesn't exist."
-		fi
+		playd_longcat_playlist
 		;;
 
 	'list' | '--list' | '-l' )
-		if [ -f "$PLAYD_PLAYLIST" ]; then
-			if [ "$OS" = 'FreeBSD' ]; then
-				awk '/^'"`playd_current_file_escaped`"'$/ { print NR"|* " $0; next } /.*/ { print NR "|  " $0 }'  "$PLAYD_PLAYLIST" | sed -r -e 's#/.*/##' -e 's#_# #g' -E -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -E -e "s#\.($PLAYD_FILE_FORMATS)\$##" | $PAGER
-			else
-				# assuming Linux
-				awk '/^'"`playd_current_file_escaped`"'$/ { print NR"|* " $0; next } /.*/ { print NR "|  " $0 }'  "$PLAYD_PLAYLIST" | sed -r -e 's#/.*/##' -e 's#_# #g' -E -e 's#^(([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?##' -e 's#^[ ]*##' -e 's# ?- ?[0-9]{1,2} ?- ?# - #' -e 's#-[0-9]{2}\.# - #' -e "s#\.($PLAYD_FILE_FORMATS)\$##" | $PAGER
-			fi
-		else
-			playd_warn "Default playlist doesn't exist."
-		fi
-
+		playd_cat_playlist | $PAGER
 		;;
 
 	'--longlist' | 'longlist' | 'llist' | '--llist' | '-L' )
-		if [ -f "$PLAYD_PLAYLIST" ]; then 
-			awk '/^'"`playd_current_file_escaped`"'$/ { print NR"|* " $0; next } /.*/ { print NR "|  " $0 }'  "$PLAYD_PLAYLIST" | $PAGER
-		else
-			playd_warn "Default playlist doesn't exist."
-		fi
+		playd_longcat_playlist | $PAGER
 		;;
 
 	# seems buggy
@@ -443,9 +454,13 @@ while [ $# -gt 0 ]; do
 		if [ $2 ]; then
 			if [ $2 -ne 0 ]; then
 				while [ -n "$2" ]; do
-					[ $2 -gt 0 ] \
-						&& { playd_put `awk '{ if (NR == '$2' ) item = $0 } END { print "loadfile " "\""item"\" '$playd_append'" }' "$PLAYD_PLAYLIST"`; shift; playd_append=1; } \
-						|| break
+					if [ $2 -gt 0 ]; then
+						playd_put `awk '{ if (NR == '$2' ) item = $0 } END { print "loadfile " "\""item"\" '$playd_append'" }' "$PLAYD_PLAYLIST"`
+						shift
+						playd_append=1
+					else
+						break
+					fi
 				done
 			else
 				playd_warn "$1 needs numeric argument. Ignoring"
