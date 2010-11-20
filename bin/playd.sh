@@ -34,7 +34,7 @@
 # project email: playd@bsdroot.lv
 # 1}}}
 
-readonly PLAYD_VERSION='1.11.0'
+readonly PLAYD_VERSION='1.12.0'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -147,7 +147,7 @@ playd_check() {	# {{{1
 playd_clean() {	#{{{1
 	# clean files after playd
 	rm -f "$PLAYD_PLAYLIST.tmp"
-	playd_check && rm -f "$PLAYD_PIPE" "$PLAYD_LOCK"
+	playd_check && rm -f "$PLAYD_PIPE" "$PLAYD_LOCK" "$PLAYD_PLAYLIST.tmp"
 }	# 1}}}
 
 playd_start() {	# {{{1
@@ -520,6 +520,18 @@ while [ $# -gt 0 ]; do
 			else
 				playd_warn "Can't figure current track. Sorry"
 			fi
+		else
+			playd_warn "Default playlist doesn't exist."
+		fi
+		;;
+	
+	'jump' | '--jump' )
+		if [ -f "$PLAYD_PLAYLIST" ]; then
+			current_id=$(($current_id - 1))
+			awk 'NR >= '"$2"' { print $0 }' "$PLAYD_PLAYLIST"  > "$PLAYD_PLAYLIST.tmp"
+			shift
+			playd_put "loadlist '$PLAYD_PLAYLIST.tmp' $playd_append"
+			playd_append=1
 		else
 			playd_warn "Default playlist doesn't exist."
 		fi
