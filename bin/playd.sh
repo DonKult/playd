@@ -33,12 +33,10 @@
 # 1}}}
 # project email: playd@bsdroot.lv
 
-readonly PLAYD_VERSION='1.13.0'
+readonly PLAYD_VERSION='1.13.1'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
-PAGER=${PAGER:-more}
-
 playd_warn() {	# {{{1
 	while [ $# -gt 0 ]; do
 		echo "WARN: $1" >&2
@@ -64,6 +62,14 @@ readonly PLAYD_HOME="${XDG_CONFIG_HOME:-"$HOME/.config"}/playd"
 readonly PLAYD_PIPE="$PLAYD_HOME/playd.fifo"
 readonly PLAYD_PLAYLIST="$PLAYD_HOME/playlist.plst"
 readonly PLAYD_LOCK="$PLAYD_HOME/mplayer.lock"
+
+# users config file
+[ -f "$PLAYD_HOME/playd.conf" ] && . "$PLAYD_HOME/playd.conf"
+
+PAGER=${PAGER:-more}
+FORMAT_SHORTNAMES=${FORMAT_SHORTNAMES:-'yes'}
+FORMAT_SPACES=${FORMAT_SPACES:-'yes'}
+
 
 # to customise mplayers command line set PLAYD_MPLAYER_USER_OPTIONS environment variable
 readonly MPLAYER_CMD_GENERIC="$PLAYD_MPLAYER_USER_OPTIONS -really-quiet -idle -input file=$PLAYD_PIPE"
@@ -91,35 +97,41 @@ from forums.freebsd.org for few lines of sh
 
 
 COMMANDS (long names):
+  again
   append
   audio-delay value [ --absolute ]
+  brightness value [ --absolute 
   cat
   cd [ track ]
   cmd 'mplayer command'
-  brightness value [ --absolute 
+  connection
   contrast value [ --absolute ]
   dvd [ track ]
   file [ file | directory ]
+  filename
   gamma value [ --absolute ]
   hue value [ --absolute ]
+  jump song_id | random
   list
   longcat
   longlist
+  loop [times]
   mute
   next
   nocheck file
   pause
   play item1 [item2] ...
   playlist
+  previous
   randomise
   restart [ --console ] [ --nofork ]
   rmlist
-  seek value [ --absolute | --present ]
   saturation value [ --absolute ]
+  seek value [ --absolute | --present ]
   start [ --console ] [ --nofork ]
   status
-  subtitles file
   stop
+  subtitles file
   switch-audio
   switch-subtitle
   volume value [ --absolute ]
@@ -364,29 +376,39 @@ playd_current_file_escaped() { # {{{1
 
 playd_cat_playlist() { # {{{1
 	if [ -f "$PLAYD_PLAYLIST" ]; then
-		if [ "$OS" = 'FreeBSD' ]; then
-			awk '/^'"`playd_current_file_escaped`"'$/ { print NR"|* "$0; next } /.*/ { print NR"|  "$0 }'  "$PLAYD_PLAYLIST" \
-				| sed -r \
-					-e 's#/.*/##' \
-					-e 's#_# #g' \
-					-e 's#^[ ]*##' \
-					-e 's# ?- ?[0-9]{1,2} ?- ?# - #' \
-					-e 's#-[0-9]{2}\.# - #' \
-					-E -e "s#\.($PLAYD_FILE_FORMATS)\$##" \
-					-E -e 's#\|  (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|  #' \
-					-E -e 's#\|\* (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|* #'
+		if [ $FORMAT_SHORTNAMES = 'yes' -o $FORMAT_SHORTNAMES = 'YES' ]; then
+			if [ "$OS" = 'FreeBSD' ]; then
+				awk '/^'"`playd_current_file_escaped`"'$/ { print NR"|* "$0; next } /.*/ { print NR"|  "$0 }'  "$PLAYD_PLAYLIST" \
+					| sed -r \
+						-e 's#/.*/##' \
+						-e 's#_# #g' \
+						-e 's#^[ ]*##' \
+						-e 's# ?- ?[0-9]{1,2} ?- ?# - #' \
+						-e 's#-[0-9]{2}\.# - #' \
+						-E -e "s#\.($PLAYD_FILE_FORMATS)\$##" \
+						-E -e 's#\|  (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|  #' \
+						-E -e 's#\|\* (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|* #'
+			else
+				# assuming Linux
+				awk '/^'"`playd_current_file_escaped`"'$/ { print NR"|* "$0; next } /.*/ { print NR"|  "$0 }'  "$PLAYD_PLAYLIST" \
+					| sed -r \
+						-e 's#/.*/##' \
+						-e 's#_# #g' \
+						-e 's#^[ ]*##' \
+						-e 's# ?- ?[0-9]{1,2} ?- ?# - #' \
+						-e 's#-[0-9]{2}\.# - #' \
+						-e "s#\.($PLAYD_FILE_FORMATS)\$##" \
+						-e 's#\|  (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|  #' \
+						-e 's#\|\* (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|* #'
+			fi
 		else
-			# assuming Linux
-			awk '/^'"`playd_current_file_escaped`"'$/ { print NR"|* "$0; next } /.*/ { print NR"|  "$0 }'  "$PLAYD_PLAYLIST" \
-				| sed -r \
-					-e 's#/.*/##' \
-					-e 's#_# #g' \
-					-e 's#^[ ]*##' \
-					-e 's# ?- ?[0-9]{1,2} ?- ?# - #' \
-					-e 's#-[0-9]{2}\.# - #' \
-					-e "s#\.($PLAYD_FILE_FORMATS)\$##" \
-					-e 's#\|  (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|  #' \
-					-e 's#\|\* (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|* #'
+			if [ $FORMAT_SPACES = 'yes' -o $FORMAT_SPACES = 'YES' ]; then
+				awk '/^'"`playd_current_file_escaped`"'$/ { print NR"|* "$0; next } /.*/ { print NR"|  "$0 }'  "$PLAYD_PLAYLIST" \
+					| sed -e 's#/.*/##' -e 's#_# #g'
+			else
+				awk '/^'"`playd_current_file_escaped`"'$/ { print NR"|* "$0; next } /.*/ { print NR"|  "$0 }'  "$PLAYD_PLAYLIST" \
+					| sed -e 's#/.*/##'
+			fi
 		fi
 	else
 		playd_warn "Default playlist doesn't exist."
