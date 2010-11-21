@@ -357,12 +357,13 @@ playd_current_file() { # {{{1
 	# prints current file name, that mplayer is playing
 	playd_check
 	pid=$?
+	[ $pid -ne 0 ] || return
 	if [ "$OS" = 'FreeBSD' ]; then
 		# this sed pattern is ugly if you ask me, yet I can't figure out better one
-		[ $pid -ne 0 ] && procstat -f $pid | grep -e ' 4 v r r-------' | sed -e 's#.* /#/#'
+		procstat -f $pid | grep -e ' 4 v r r-------' | sed -e 's#.* /#/#'
 	else
 		# this sed pattern is ugly if you ask me, yet I can't figure out better one
-		[ $pid -ne 0 ] && lsof -p $pid | grep -e '4r' | sed -e 's#.* /#/#'
+		lsof -p $pid | grep -e '4r' | sed -e 's#.* /#/#'
 	fi
 } # 1}}}
 
@@ -370,7 +371,12 @@ playd_current_conn() { # {{{1
 	# prints current connection info of stream
 	playd_check
 	pid=$?
-	[ $pid -ne 0 ] && procstat -f $pid | grep -e ' 4 s - rw------' | awk '{print $9" "$11" -> "$10}'
+	[ $pid -ne 0 ] || return
+	if [ "$OS" = 'FreeBSD' ]; then
+		procstat -f $pid | grep -e ' 4 s - rw------' | awk '{print $9" "$11" -> "$10}'
+	else
+		playd_warn "Sorry this feature is not available on $OS"
+	fi
 } # 1}}}
 
 playd_current_file_escaped() { # {{{1
