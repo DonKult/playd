@@ -528,7 +528,7 @@ while [ $# -gt 0 ]; do
 	'jump' | '--jump' )
 		if [ -f "$PLAYD_PLAYLIST" ]; then
 			item_count=`awk 'END { print NR }' $PLAYD_PLAYLIST`
-			if [ "$2" = 'rnd' ]; then
+			if [ "$2" = 'rnd' -o "$2" = 'random' ]; then
 				number=`jot -r 1 0 $item_count`
 				awk 'NR >= '$number' { print $0 }' "$PLAYD_PLAYLIST"  > "$PLAYD_PLAYLIST.tmp"
 				awk 'NR < '$number' { print $0 }' "$PLAYD_PLAYLIST"  >> "$PLAYD_PLAYLIST.tmp"
