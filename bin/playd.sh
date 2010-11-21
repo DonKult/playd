@@ -1,7 +1,6 @@
 #!/bin/sh
-
 # License {{{1
-
+#
 # Copyright (c) 2009-2010, Aldis Berjoza <aldis@bsdroot.lv>
 # All rights reserved.
 #
@@ -30,11 +29,11 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-# project email: playd@bsdroot.lv
+#
 # 1}}}
+# project email: playd@bsdroot.lv
 
-readonly PLAYD_VERSION='1.12.5'
+readonly PLAYD_VERSION='1.13.0'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -67,8 +66,8 @@ readonly PLAYD_PLAYLIST="$PLAYD_HOME/playlist.plst"
 readonly PLAYD_LOCK="$PLAYD_HOME/mplayer.lock"
 
 # to customise mplayers command line set PLAYD_MPLAYER_USER_OPTIONS environment variable
-#readonly MPLAYER_CMD_GENERIC="$PLAYD_MPLAYER_USER_OPTIONS -really-quiet -idle -input file=$PLAYD_PIPE"
-readonly MPLAYER_CMD_GENERIC="$PLAYD_MPLAYER_USER_OPTIONS -quiet -idle -input file=$PLAYD_PIPE"
+readonly MPLAYER_CMD_GENERIC="$PLAYD_MPLAYER_USER_OPTIONS -really-quiet -idle -input file=$PLAYD_PIPE"
+#readonly MPLAYER_CMD_GENERIC="$PLAYD_MPLAYER_USER_OPTIONS -quiet -idle -input file=$PLAYD_PIPE"
 readonly MPLAYER_CMD="mplayer $MPLAYER_CMD_GENERIC"
 readonly MPLAYER_SND_ONLY_CMD="mplayer -vo null $MPLAYER_CMD_GENERIC"
 NOVID=0
@@ -87,6 +86,7 @@ Special thanks to:
   * DutchDaemon
   * blah
   * john_doe
+  * eye
 from forums.freebsd.org for few lines of sh
 
 
@@ -456,6 +456,20 @@ while [ $# -gt 0 ]; do
 		playd_longcat_playlist | $PAGER
 		;;
 
+	'--loop' | 'loop' )
+		if [ -n $2 ]; then
+			playd_put "loop $2"
+			shift
+		else
+			if [ $2 = 'forever' ]; then
+				playd_put 'loop 0'
+				shift
+			else
+				playd_put 'loop -1'
+			fi
+		fi
+		;;
+
 	# seems buggy
 	# I think there's mplayer bug
 	# after using playd next or playd seek, playd play doesn't work well (if at all)
@@ -464,7 +478,7 @@ while [ $# -gt 0 ]; do
 			if [ $2 -ne 0 ]; then
 				while [ -n "$2" ]; do
 					if [ $2 -gt 0 ]; then
-						playd_put `awk '{ if (NR == '$2' ) item = $0 } END { print "loadfile " "\""item"\" '$playd_append'" }' "$PLAYD_PLAYLIST"`
+						playd_put `awk '{ if (NR == '$2') item = $0 } END { print "loadfile " "\""item"\" '$playd_append'" }' "$PLAYD_PLAYLIST"`
 						shift
 						playd_append=1
 					else
@@ -504,39 +518,35 @@ while [ $# -gt 0 ]; do
 		;;
 
 	'next' | '--next' | '-n' )
-		playd_put "seek 100 1"
+		playd_put "pt_step 1"
 		;;
 	
 	'previous' | '--previous' | 'prev' | '--prev' )
-		if [ -f "$PLAYD_PLAYLIST" ]; then
-			current_id=$(awk 'BEGIN { XMATCH=0 }; /^'"`playd_current_file_escaped`"'$/ && XMATCH == 0 { XMATCH=1; print NR }' "$PLAYD_PLAYLIST")
-			if [ "x$current_id" != 'x' ]; then
-				if [ $current_id -ne 1 ]; then
-					current_id=$(($current_id - 1))
-					awk 'NR >= '"$current_id"' { print $0 }' "$PLAYD_PLAYLIST"  > "$PLAYD_PLAYLIST.tmp"
-					playd_put "loadlist '$PLAYD_PLAYLIST.tmp' $playd_append"
-				else
-					playd_warn "You're on first track."
-					playd_put "loadlist '$PLAYD_PLAYLIST' $playd_append"
-				fi
-				playd_append=1
-			else
-				playd_warn "Can't figure current track. Sorry"
-			fi
-		else
-			playd_warn "Default playlist doesn't exist."
-		fi
+		playd_put "pt_step -1"
 		;;
 	
 	'jump' | '--jump' )
 		if [ -f "$PLAYD_PLAYLIST" ]; then
-			if [ -n $2 ]; then
-				awk 'NR >= '"$2"' { print $0 }' "$PLAYD_PLAYLIST"  > "$PLAYD_PLAYLIST.tmp"
-				shift
-				playd_put "loadlist '$PLAYD_PLAYLIST.tmp' $playd_append"
+			item_count=`awk 'END { print NR }' $PLAYD_PLAYLIST`
+			if [ "$2" = 'rnd' ]; then
+				number=`jot -r 1 0 $item_count`
+				awk 'NR >= '$number' { print $0 }' "$PLAYD_PLAYLIST"  > "$PLAYD_PLAYLIST.tmp"
+				awk 'NR < '$number' { print $0 }' "$PLAYD_PLAYLIST"  >> "$PLAYD_PLAYLIST.tmp"
+				playd_put "loadlist '$PLAYD_PLAYLIST.tmp' 0"
 				playd_append=1
+				shift
+			elif [ $2 -gt 0 ]; then
+				if [ $2 -le $item_count ]; then
+					awk 'NR >= '"$2"' { print $0 }' "$PLAYD_PLAYLIST"  > "$PLAYD_PLAYLIST.tmp"
+					awk 'NR < '"$2"' { print $0 }' "$PLAYD_PLAYLIST"  >> "$PLAYD_PLAYLIST.tmp"
+					playd_put "loadlist '$PLAYD_PLAYLIST.tmp' 0"
+					playd_append=1
+				else
+					playd_warn "Playlist Item number out of range."
+				fi
+				shift
 			else
-				playd_warn "$1 needs numeric argument. Ignoring"
+				playd_warn "Invalid argument for $1. Must be number or 'rnd'."
 			fi
 		else
 			playd_warn "Default playlist doesn't exist."
