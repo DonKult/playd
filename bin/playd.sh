@@ -389,7 +389,7 @@ playd_cat_playlist() { # {{{1
 	if [ -f "$PLAYD_PLAYLIST" ]; then
 		if [ $FORMAT_SHORTNAMES = 'yes' -o $FORMAT_SHORTNAMES = 'YES' ]; then
 			if [ "$OS" = 'FreeBSD' ]; then
-				awk '/^'"`playd_current_file_escaped`"'$/ { print NR"|* "$0; next } /.*/ { print NR"|  "$0 }'  "$PLAYD_PLAYLIST" \
+				playd_longcat_playlist \
 					| sed -r \
 						-e 's#/.*/##' \
 						-e 's#_# #g' \
@@ -401,7 +401,7 @@ playd_cat_playlist() { # {{{1
 						-E -e 's#\|\* (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|* #'
 			else
 				# assuming Linux
-				awk '/^'"`playd_current_file_escaped`"'$/ { print NR"|* "$0; next } /.*/ { print NR"|  "$0 }'  "$PLAYD_PLAYLIST" \
+				playd_longcat_playlist \
 					| sed -r \
 						-e 's#/.*/##' \
 						-e 's#_# #g' \
@@ -414,11 +414,9 @@ playd_cat_playlist() { # {{{1
 			fi
 		else
 			if [ $FORMAT_SPACES = 'yes' -o $FORMAT_SPACES = 'YES' ]; then
-				awk '/^'"`playd_current_file_escaped`"'$/ { print NR"|* "$0; next } /.*/ { print NR"|  "$0 }'  "$PLAYD_PLAYLIST" \
-					| sed -e 's#/.*/##' -e 's#_# #g'
+				playd_longcat_playlist | sed -e 's#/.*/##' -e 's#_# #g'
 			else
-				awk '/^'"`playd_current_file_escaped`"'$/ { print NR"|* "$0; next } /.*/ { print NR"|  "$0 }'  "$PLAYD_PLAYLIST" \
-					| sed -e 's#/.*/##'
+				playd_longcat_playlist | sed -e 's#/.*/##'
 			fi
 		fi
 	else
@@ -428,7 +426,8 @@ playd_cat_playlist() { # {{{1
 
 playd_longcat_playlist() { # {{{1
 	if [ -f "$PLAYD_PLAYLIST" ]; then
-		awk '/^'"`playd_current_file_escaped`"'$/ { print NR"|* " $0; next } /.*/ { print NR "|  " $0 }'  "$PLAYD_PLAYLIST"
+		padding=`awk 'END { print length(NR) }' $PLAYD_PLAYLIST`
+		awk "/^`playd_current_file_escaped`"'$/ { printf("%0'$padding'd|* %s\n", NR, $0); next } /.*/ { printf("%0'$padding'd|  %s\n", NR, $0) }' "$PLAYD_PLAYLIST"
 	else
 		playd_warn "Default playlist doesn't exist."
 	fi
