@@ -357,8 +357,13 @@ playd_current_file() { # {{{1
 	# prints current file name, that mplayer is playing
 	playd_check
 	pid=$?
-	# this sed pattern is ugly if you ask me, yet I can't figure out better one
-	[ $pid -ne 0 ] && procstat -f $pid | grep -e ' 4 v r r-------' | sed -e 's#.* /#/#'
+	if [ "$OS" = 'FreeBSD' ]; then
+		# this sed pattern is ugly if you ask me, yet I can't figure out better one
+		[ $pid -ne 0 ] && procstat -f $pid | grep -e ' 4 v r r-------' | sed -e 's#.* /#/#'
+	else
+		# this sed pattern is ugly if you ask me, yet I can't figure out better one
+		[ $pid -ne 0 ] && lsof -p $pid | grep -e '4r' | sed -e 's#.* /#/#'
+	fi
 } # 1}}}
 
 playd_current_conn() { # {{{1
