@@ -470,7 +470,7 @@ while [ $# -gt 0 ]; do
 		playd_longcat_playlist
 		;;
 
-	'list' | '--list' | '-l' )
+	'list' | 'ls' | '--list' | '-l' )
 		playd_cat_playlist | $PAGER
 		;;
 
