@@ -33,7 +33,7 @@
 # 1}}}
 # project email: playd@bsdroot.lv
 
-readonly PLAYD_VERSION='1.13.3'
+readonly PLAYD_VERSION='1.13.4'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -103,7 +103,6 @@ COMMANDS (long names):
   cat
   cd [ track ]
   cmd 'mplayer command'
-  connection
   contrast value [ --absolute ]
   dvd [ track ]
   file [ file | directory ]
@@ -363,18 +362,6 @@ playd_current_file() { # {{{1
 	else
 		# this sed pattern is ugly if you ask me, yet I can't figure out better one
 		lsof -p $pid | grep -e '4r' | sed -e 's#.* /#/#'
-	fi
-} # 1}}}
-
-playd_current_conn() { # {{{1
-	# prints current connection info of stream
-	playd_check
-	pid=$?
-	[ $pid -ne 0 ] || return
-	if [ "$OS" = 'FreeBSD' ]; then
-		procstat -f $pid | grep -e ' 4 s - rw------' | awk '{print $9" "$11" -> "$10}'
-	else
-		playd_warn "Sorry this feature is not available on $OS"
 	fi
 } # 1}}}
 
@@ -666,10 +653,6 @@ while [ $# -gt 0 ]; do
 		playd_current_file
 		;;
 
-	'conn' | '--conn' | 'connection' | '--connection' )
-		playd_current_conn
-		;;
-	
 	*'://'* )
 		playd_playlist_add "$1"
 		;;
