@@ -33,7 +33,7 @@
 # 1}}}
 # project email: playd@bsdroot.lv
 
-readonly PLAYD_VERSION='1.13.4'
+readonly PLAYD_VERSION='1.14.0'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -64,6 +64,7 @@ readonly PLAYD_HOME="${XDG_CONFIG_HOME:-"$HOME/.config"}/playd"
 
 PLAYD_PIPE="${PLAYD_PIPE:-$PLAYD_HOME/playd.fifo}"
 PLAYD_PLAYLIST="${PLAYD_PLAYLIST:-$PLAYD_HOME/playlist.plst}"
+PLAYD_FAV_PLAYLIST="${PLAYD_FAV_PLAYLIST:-$PLAYD_HOME/favourite.plst}"
 PLAYD_LOCK="${PLAYD_LOCK:-$PLAYD_HOME/mplayer.lock}"
 
 PAGER=${PAGER:-more}
@@ -368,7 +369,7 @@ playd_current_file() { # {{{1
 playd_current_file_escaped() { # {{{1
 	# prints current file name, that mplayer is playing.
 	# this function prepares string for awk (adds escape sequences)
-	playd_current_file | sed -e 's#[/.)(*{}+?$^]#\\&#g' -e 's#\[#\\\[#g' -e 's#\]#\\\]#g'
+	playd_current_file | sed -e 's#[/.)(*{}+?$&^-]#\\&#g' -e 's#\[#\\\[#g' -e 's#\]#\\\]#g'
 } # 1}}}
 
 playd_cat_playlist() { # {{{1
@@ -651,6 +652,37 @@ while [ $# -gt 0 ]; do
 
 	'filename' | '--filename' | 'fname' | '--fname' )
 		playd_current_file
+		;;
+	
+	'favourite' | '--favourite' | 'fav' | '--fav' )
+		playd_current_file >> "$PLAYD_FAV_PLAYLIST"
+		cp "$PLAYD_FAV_PLAYLIST" "$PLAYD_FAV_PLAYLIST.tmp"
+		sort "$PLAYD_FAV_PLAYLIST.tmp" | uniq > "$PLAYD_FAV_PLAYLIST"
+		rm "$PLAYD_FAV_PLAYLIST.tmp"
+		;;
+
+	'nofavourite' | '--nofavourite' | 'nofav' | '--nofav' )
+		awk '/^'"`playd_current_file_escaped`"'$/ { next }; /.*/ { print $0 }' "$PLAYD_FAV_PLAYLIST" > "$PLAYD_FAV_PLAYLIST.tmp"
+		mv "$PLAYD_FAV_PLAYLIST.tmp" "$PLAYD_FAV_PLAYLIST"
+		;;
+	
+	'playfavourite' | '--playfavourite' | 'playfav' | '--playfav' )
+		if [ -f "$PLAYD_FAV_PLAYLIST" ]; then
+			if [ $playd_append -eq 0 ]; then
+				cp "$PLAYD_FAV_PLAYLIST" "$PLAYD_PLAYLIST"
+			else
+				cat "$PLAYD_FAV_PLAYLIST" >> "$PLAYD_PLAYLIST"
+			fi
+			playd_randomise
+			playd_put "loadlist '$PLAYD_FAV_PLAYLIST' 0"
+			playd_append=1
+		else
+			playd_warn "Favourite playlist doesn't exist."
+		fi
+		;;
+	
+	'listfavourite' | '--listfavourite' | 'lsfav' | '--lsfav' )
+		$PAGER "$PLAYD_FAV_PLAYLIST"
 		;;
 
 	*'://'* )
