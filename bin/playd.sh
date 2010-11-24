@@ -57,6 +57,14 @@ playd_die() {	# {{{1
 [ -z "$HOME" ] && playd_die 'You are homeless. $HOME not defined'
 
 readonly OS=`uname`
+case $OS in
+*BSD )
+	readonly ESED="sed -E"
+	;;
+* )
+	readonly ESED="sed -r"
+	;;
+esac
 
 readonly PLAYD_HOME="${XDG_CONFIG_HOME:-"$HOME/.config"}/playd"
 # users config file
@@ -73,7 +81,7 @@ FORMAT_SPACES=${FORMAT_SPACES:-'yes'}
 
 
 # to customise mplayers command line set PLAYD_MPLAYER_USER_OPTIONS environment variable
-readonly MPLAYER_CMD_GENERIC="$PLAYD_MPLAYER_USER_OPTIONS -really-quiet -msglevel all=-1 -nomsgmodule -idle -input file=$PLAYD_PIPE"
+readonly MPLAYER_CMD_GENERIC="$PLAYD_MPLAYER_USER_OPTIONS -msglevel all=-1 -nomsgmodule -idle -input file=$PLAYD_PIPE"
 readonly MPLAYER_CMD="mplayer $MPLAYER_CMD_GENERIC"
 readonly MPLAYER_SND_ONLY_CMD="mplayer -vo null $MPLAYER_CMD_GENERIC"
 NOVID=0
@@ -358,10 +366,8 @@ playd_current_file() { # {{{1
 	pid=$?
 	[ $pid -ne 0 ] || return
 	if [ "$OS" = 'FreeBSD' ]; then
-		# this sed pattern is ugly if you ask me, yet I can't figure out better one
 		procstat -f $pid | grep -e ' 4 v r r-------' | sed -e 's#.* /#/#'
 	else
-		# this sed pattern is ugly if you ask me, yet I can't figure out better one
 		lsof -p $pid | grep -e '4r' | sed -e 's#.* /#/#'
 	fi
 } # 1}}}
@@ -375,21 +381,8 @@ playd_current_file_escaped() { # {{{1
 playd_cat_playlist() { # {{{1
 	if [ -f "$PLAYD_PLAYLIST" ]; then
 		if [ $FORMAT_SHORTNAMES = 'yes' -o $FORMAT_SHORTNAMES = 'YES' ]; then
-			if [ "$OS" = 'FreeBSD' ]; then
 				playd_longcat_playlist \
-					| sed -r \
-						-e 's#/.*/##' \
-						-e 's#_# #g' \
-						-e 's#^[ ]*##' \
-						-e 's# ?- ?[0-9]{1,2} ?- ?# - #' \
-						-e 's#-[0-9]{2}\.# - #' \
-						-E -e "s#\.($PLAYD_FILE_FORMATS)\$##" \
-						-E -e 's#\|  (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|  #' \
-						-E -e 's#\|\* (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|* #'
-			else
-				# assuming Linux
-				playd_longcat_playlist \
-					| sed -r \
+					| $ESED \
 						-e 's#/.*/##' \
 						-e 's#_# #g' \
 						-e 's#^[ ]*##' \
@@ -398,7 +391,6 @@ playd_cat_playlist() { # {{{1
 						-e "s#\.($PLAYD_FILE_FORMATS)\$##" \
 						-e 's#\|  (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|  #' \
 						-e 's#\|\* (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|* #'
-			fi
 		else
 			if [ $FORMAT_SPACES = 'yes' -o $FORMAT_SPACES = 'YES' ]; then
 				playd_longcat_playlist | sed -e 's#/.*/##' -e 's#_# #g'
