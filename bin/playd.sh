@@ -86,15 +86,15 @@ readonly MPLAYER_CMD="mplayer $MPLAYER_CMD_GENERIC"
 readonly MPLAYER_SND_ONLY_CMD="mplayer -vo null $MPLAYER_CMD_GENERIC"
 NOVID=0
 NOPLAY=0
-playd_append=0
-playd_help="man 1 playd"
+PLAYD_APPEND=0
+PLAYD_HELP="man 1 playd"
 
 playd_put() {	# {{{1
 	# put argv into pipe
 	case "$1" in
 		'loadlist' | 'loadfile' )
 			[ -f "$2" ] \
-				&& playd_append=1 \
+				&& PLAYD_APPEND=1 \
 				|| { playd_warn "File doesn't exist:" "  $2"; return 1; }
 			;;
 	esac
@@ -109,8 +109,8 @@ playd_check() {	# {{{1
 	# check if playd daemon is running and return pid
 	# returns 0 if daemon ain't running
 	[ -f "$PLAYD_LOCK" ] \
-		&& local pid=$(pgrep -g `cat $PLAYD_LOCK` -n mplayer) \
-		&& return $pid
+		&& local PID=$(pgrep -g `cat $PLAYD_LOCK` -n mplayer) \
+		&& return $PID
 	return 0
 }	# 1}}}
 
@@ -125,10 +125,10 @@ playd_start() {	# {{{1
 		[ -p "$PLAYD_PIPE" ] || { mkfifo "$PLAYD_PIPE" || playd_die "Can't create \"$PLAYD_PIPE\""; }
 		cd /
 		[ $NOVID -eq 0 ] \
-			&& local mplayer_run_cmd="$MPLAYER_CMD" \
-			|| local mplayer_run_cmd="$MPLAYER_SND_ONLY_CMD"
+			&& local MPLAYER_RUN_CMD="$MPLAYER_CMD" \
+			|| local MPLAYER_RUN_CMD="$MPLAYER_SND_ONLY_CMD"
 
-		{ ${mplayer_run_cmd} > /dev/null 2> /dev/null & } \
+		{ $MPLAYER_RUN_CMD > /dev/null 2> /dev/null & } \
 			&& echo "$$" > "$PLAYD_LOCK" \
 			|| playd_die 'Failed to start mplayer'
 		cd - > /dev/null 2> /dev/null
@@ -138,15 +138,15 @@ playd_start() {	# {{{1
 playd_stop() {	# {{{1
 	# stop playd daemon
 	playd_check || {
-		pid=$?
+		PID=$?
 		playd_put 'quit'
 		sleep 1 # give mplayer 1 second to quit
 		for i in 1 2 3; do
-			kill -s 0 $pid 2> /dev/null || { playd_clean; return; }
-			kill $pid 2> /dev/null
+			kill -s 0 $PID 2> /dev/null || { playd_clean; return; }
+			kill $PID 2> /dev/null
 			sleep 1
 		done
-		kill -s 0 $pid 2> /dev/null && playd_die "Can't kill mplayer slave with pid $kill_pid"
+		kill -s 0 $PID 2> /dev/null && playd_die "Can't kill mplayer slave with pid $PID"
 	}
 	playd_clean
 }	# 1}}}
@@ -157,16 +157,16 @@ playd_mk_playlist() {	# {{{1
 	# $1 - dir to make list
 	# $1 and $fileName must be double quoted to avoid
 	#   problems with filenames that contain special characters
-	ls "$1" | while read fileName; do
-		if [ -f "$1/$fileName" ]; then
-			local fname="$1/$fileName"
-			echo "${fileName##*.}" | grep -q -i -E -e "^(${PLAYD_FILE_FORMATS})$" \
-				&& echo "$fname" >> "$PLAYD_PLAYLIST.tmp" \
-				|| { file -ib "$fname" | grep -q -E -e '^(audio|video)' && echo "$fname" >> "$PLAYD_PLAYLIST.tmp"; }
-		elif [ -d "$1/$fileName" ]; then
-			playd_mk_playlist "$1/$fileName"
+	ls "$1" | while read FILENAME; do
+		if [ -f "$1/$FILENAME" ]; then
+			local FNAME="$1/$FILENAME"
+			echo "${FILENAME##*.}" | grep -q -i -E -e "^(${PLAYD_FILE_FORMATS})$" \
+				&& echo "$FNAME" >> "$PLAYD_PLAYLIST.tmp" \
+				|| { file -ib "$FNAME" | grep -q -E -e '^(audio|video)' && echo "$FNAME" >> "$PLAYD_PLAYLIST.tmp"; }
+		elif [ -d "$1/$FILENAME" ]; then
+			playd_mk_playlist "$1/$FILENAME"
 		else
-			playd_die "What the hell: \"$1/$fileName\""
+			playd_die "What the hell: \"$1/$FILENAME\""
 		fi
 	done
 }	# 1}}}
@@ -182,19 +182,19 @@ playd_fullpath() {	# {{{1
 playd_playlist_add() {	# {{{1
 	#add entry to playlist
 	# arg1 = playlist item
-	[ $playd_append -eq 1 ] \
+	[ $PLAYD_APPEND -eq 1 ] \
 		&& echo "$1" >> "$PLAYD_PLAYLIST" \
 		|| echo "$1" > "$PLAYD_PLAYLIST"
-	[ $NOPLAY -eq 0 ] && playd_put 'loadfile' "$1" $playd_append
+	[ $NOPLAY -eq 0 ] && playd_put 'loadfile' "$1" $PLAYD_APPEND
 }	# 1}}}
 
 playd_playlist_addlist() {	# {{{1
 	# add list to playlist
 	# arg1 = playlist item
-	[ $playd_append -eq 1 ] \
+	[ $PLAYD_APPEND -eq 1 ] \
 		&& cat "$1" >> "$PLAYD_PLAYLIST" \
 		|| cat "$1" > "$PLAYD_PLAYLIST"
-	[ $NOPLAY -eq 0 ] && playd_put 'loadlist' "$1" $playd_append
+	[ $NOPLAY -eq 0 ] && playd_put 'loadlist' "$1" $PLAYD_APPEND
 }	# 1}}}
 
 playd_randomise() {	# {{{1
@@ -202,27 +202,29 @@ playd_randomise() {	# {{{1
 	# arg1 = list to randomize
 	# at the end echos new list name
 	if [ -f "$1" ]; then
-		list=`echo "$1" | sed 's#^.*/##'`
-		rm -f "$PLAYD_HOME/$list.tmp"
+		local LIST=`echo "$1" | sed 's#^.*/##'`
+		rm -f "$PLAYD_HOME/$LIST.tmp"
 		[ ! -d "$PLAYD_HOME/rand" ] \
 			&& mkdir "$PLAYD_HOME/rand" \
 			|| rm -fR "$PLAYD_HOME/rand"/*
 
-		i=0
-		cat "$1" | while read item; do
-			echo "$item" > "$PLAYD_HOME/rand/$i"
-			i=$(($i + 1))
+		local I=0
+		cat "$1" | while read ITEM; do
+			echo "$ITEM" > "$PLAYD_HOME/rand/$I"
+			I=$(($I + 1))
 		done
 		
-		i=$(awk 'END { print NR }' "$1")
+		I=$(awk 'END { print NR }' "$1")
 
-		for j in $(jot $i $(($i - 1)) 0 -1); do
-			id=$(jot -r 1 0 $j)
-			cat "$PLAYD_HOME/rand/$id" >> "$PLAYD_HOME/$list.tmp"
-			mv "$PLAYD_HOME/rand/$j" "$PLAYD_HOME/rand/$id" 2> /dev/null > /dev/null
+		local J=
+		local ID=
+		for J in $(jot $I $(($I - 1)) 0 -1); do
+			ID=$(jot -r 1 0 $J)
+			cat "$PLAYD_HOME/rand/$ID" >> "$PLAYD_HOME/$LIST.tmp"
+			mv "$PLAYD_HOME/rand/$J" "$PLAYD_HOME/rand/$ID" 2> /dev/null > /dev/null
 		done
 		rm -Rf "$PLAYD_HOME/rand"/*
-		echo "$PLAYD_HOME/$list.tmp"
+		echo "$PLAYD_HOME/$LIST.tmp"
 		return 0
 	fi
 	playd_warn "File doesn't exist:" "$1"
@@ -234,13 +236,12 @@ playd_import() {	# {{{1
 	# arg1 filename (with full path) to playlist
 	[ -f "$1" ] || return 1
 	case `echo "${1##*.}" | tr [A-Z] [a-z]` in
+	ram )	grep -v -e '^.$' "$1" > "$PLAYD_PLAYLIST.tmp" || playd_warn "Empty playlist. Skipping" ;;
+	plst )	cat "$1" > "$PLAYD_PLAYLIST.tmp" ;;
+
 	pls )
 		{ grep -i -e '^file' "$1" || playd_warn "Empty playlist. Skipping"; } \
 			| sed -e 's/file[0-9]*=//I' > "$PLAYD_PLAYLIST.tmp"
-		;;
-
-	ram )
-		grep -v -e '^.$' "$1" > "$PLAYD_PLAYLIST.tmp" || playd_warn "Empty playlist. Skipping"
 		;;
 
 	m3u|m3u8 )
@@ -255,10 +256,6 @@ playd_import() {	# {{{1
 	xspf )
 		{ grep -i -e '<location>.*</location>' "$1" || playd_warn "Empty playlist. Skipping"; } \
 			| sed -e 's#^.*<location>##I' -e 's#</location>.*$##I' -e 's#file://##I' > "$PLAYD_PLAYLIST.tmp"
-		;;
-
-	plst )
-		cat "$1" > "$PLAYD_PLAYLIST.tmp"
 		;;
 
 	qtl )
@@ -334,24 +331,24 @@ playd_cat_playlist() { # {{{1
 
 playd_longcat_playlist() { # {{{1
 	if [ -f "$PLAYD_PLAYLIST" ]; then
-		padding=`awk 'END { print length(NR) }' $PLAYD_PLAYLIST`
-		awk "/^`playd_current_file_escaped`"'$/ { printf("%0'$padding'd|* %s\n", NR, $0); next } /.*/ { printf("%0'$padding'd|  %s\n", NR, $0) }' "$PLAYD_PLAYLIST"
+		local PADDING=`awk 'END { print length(NR) }' $PLAYD_PLAYLIST`
+		awk "/^`playd_current_file_escaped`"'$/ { printf("%0'$PADDING'd|* %s\n", NR, $0); next } /.*/ { printf("%0'$PADDING'd|  %s\n", NR, $0) }' "$PLAYD_PLAYLIST"
 	else
 		playd_warn "Default playlist doesn't exist."
 	fi
 } # 1}}}
 
 # checking for mplayer
-[ "$(which mplayer)" ] || playd_die 'mplayer not found'
+[ "`which mplayer`" ] || playd_die 'mplayer not found'
 
 [ -d "$PLAYD_HOME" ] || { mkdir -p "$PLAYD_HOME" || playd_die "Can't create \"$PLAYD_HOME\""; }
 
-[ $# -eq 0 ] && $playd_help
+[ $# -eq 0 ] && $PLAYD_HELP
 
 NOVID=0
 
 if [ "$1" = 'append' ]; then
-	playd_append=1
+	PLAYD_APPEND=1
 	shift
 fi
 
@@ -363,7 +360,7 @@ while [ $# -gt 0 ]; do
 	'cat' )								playd_cat_playlist ;;
 	'cat-favourites' | 'catfav' )		cat "$PLAYD_FAV_PLAYLIST" ;;
 	'filename' | 'fname' )				playd_current_file ;;
-	'help' | '--help' | '-h' )			$playd_help ;;
+	'help' | '--help' | '-h' )			$PLAYD_HELP ;;
 	'list' | 'ls' )						playd_cat_playlist | $PAGER ;;
 	'list-favourites' | 'lsfav' )		$PAGER "$PLAYD_FAV_PLAYLIST" ;;
 	'longcat' | 'lcat' )				playd_longcat_playlist ;;
@@ -372,7 +369,7 @@ while [ $# -gt 0 ]; do
 	'next' )							playd_put 'pt_step' 1 ;;
 	'noplay' )							NOPLAY=1 ;;
 	'pause' )							playd_put 'pause' ;;
-	'playlist' )						NOPLAY=0; playd_put 'loadlist' "$PLAYD_PLAYLIST" $playd_append ;;
+	'playlist' )						NOPLAY=0; playd_put 'loadlist' "$PLAYD_PLAYLIST" $PLAYD_APPEND ;;
 	'previous' | 'prev' )				playd_put 'pt_step' -1 ;;
 	'rmlist' )							rm -f "$PLAYD_PLAYLIST" ;;
 	'rnd' | 'randomise' )				mv `playd_randomise "$PLAYD_PLAYLIST"` "$PLAYD_PLAYLIST" ;; 
@@ -414,8 +411,8 @@ while [ $# -gt 0 ]; do
 		;;
 	
 	'play-favourites' | 'playfav' )
-		fn=`playd_randomise "$PLAYD_FAV_PLAYLIST"` \
-			&& { mv $fn "$PLAYD_PLAYLIST"; playd_put 'loadlist' "$PLAYD_PLAYLIST" 0; }
+		FN=`playd_randomise "$PLAYD_FAV_PLAYLIST"` \
+			&& { mv $FN "$PLAYD_PLAYLIST"; playd_put 'loadlist' "$PLAYD_PLAYLIST" 0; }
 		;;
 
 
@@ -446,7 +443,7 @@ while [ $# -gt 0 ]; do
 			if [ $2 -ne 0 ]; then
 				while [ -n "$2" ]; do
 					if [ $2 -gt 0 ]; then
-						playd_put 'loadfile' "`awk '{ if (NR == '$2') print $0 }' "$PLAYD_PLAYLIST"`" $playd_append
+						playd_put 'loadfile' "`awk '{ if (NR == '$2') print $0 }' "$PLAYD_PLAYLIST"`" $PLAYD_APPEND
 						shift
 					else
 						break
@@ -463,11 +460,11 @@ while [ $# -gt 0 ]; do
 
 	'seek' )
 		if [ $2 ]; then
-			match=0
-			[ $3 = 'abs' -o $3 = 'absolute' ] && match=2
-			[ $3 = '%' -o $3 = 'percent' ] && match=1
-			playd_put 'seek' "`playd_time2s $2`" $match
-			[ $match -ne 0 ] && shift
+			MATCH=0
+			[ $3 = 'abs' -o $3 = 'absolute' ] && MATCH=2
+			[ $3 = '%' -o $3 = 'percent' ] && MATCH=1
+			playd_put 'seek' "`playd_time2s $2`" $MATCH
+			[ $MATCH -ne 0 ] && shift
 			shift
 		else
 			playd_warn "$1 needs numeric argument. Ignoring"
@@ -476,14 +473,14 @@ while [ $# -gt 0 ]; do
 	
 	'jump' )
 		if [ -f "$PLAYD_PLAYLIST" ]; then
-			item_count=`awk 'END { print NR }' $PLAYD_PLAYLIST`
-			playd_append=0
-			number=$2
-			[ "$2" = 'rnd' -o "$2" = 'random' ] && number=`jot -r 1 0 $item_count`
-			if [ $number -gt 0 -a $number -le $item_count ]; then
+			ITEM_COUNT=`awk 'END { print NR }' $PLAYD_PLAYLIST`
+			PLAYD_APPEND=0
+			NUMBER=$2
+			[ "$2" = 'rnd' -o "$2" = 'random' ] && NUMBER=`jot -r 1 0 $ITEM_COUNT`
+			if [ $NUMBER -gt 0 -a $NUMBER -le $ITEM_COUNT ]; then
 				awk 'NR >= '"$2"' { print $0 }' "$PLAYD_PLAYLIST"  > "$PLAYD_PLAYLIST.tmp"
 				awk 'NR < '"$2"' { print $0 }' "$PLAYD_PLAYLIST"  >> "$PLAYD_PLAYLIST.tmp"
-				playd_put 'loadlist' "$PLAYD_PLAYLIST.tmp" $playd_append
+				playd_put 'loadlist' "$PLAYD_PLAYLIST.tmp" $PLAYD_APPEND
 				shift
 			else
 				playd_warn "Invalid or out or range Playlist Item number."
@@ -495,17 +492,17 @@ while [ $# -gt 0 ]; do
 
 	'cd' \
 	| 'dvd' )
-		[ "$1" = 'cd' ] && media='cdda://' || media='dvdnav://'
+		[ "$1" = 'cd' ] && MEDIA='cdda://' || MEDIA='dvdnav://'
 		if [ $2 ]; then
 			if [ $2 -gt 0 ]; then
 				while [ $2 ]; do
 					[ $2 -gt 0 ] \
-						&& { playd_playlist_add "$media$2"; shift; } \
+						&& { playd_playlist_add "$MEDIA$2"; shift; } \
 						|| break
 				done
 			fi
 		else
-			playd_playlist_add "$media"
+			playd_playlist_add "$MEDIA"
 		fi
 		;;
 
@@ -517,12 +514,12 @@ while [ $# -gt 0 ]; do
 	| 'saturation' \
 	| 'volume' | 'vol' )
 		if [ -n $2 ]; then
-			[ "$3" = 'abs' -o "$3" = 'absolute' ] && match=1 || match=0
-			command="$1"
-			[ "$1" = 'vol' ] && command='volume'
-			[ "$1" = 'audio-delay' ] && command='audio_delay'
-			playd_put "$command" "$2" $match
-			shift $((1 + $match))
+			[ "$3" = 'abs' -o "$3" = 'absolute' ] && MATCH=1 || MATCH=0
+			COMMAND="$1"
+			[ "$1" = 'vol' ] && COMMAND='volume'
+			[ "$1" = 'audio-delay' ] && COMMAND='audio_delay'
+			playd_put "$COMMAND" "$2" $MATCH
+			shift $((1 + $MATCH))
 		else
 			playd_warn "$1 needs at least numeric argument. Ignoring"
 		fi
@@ -533,20 +530,20 @@ while [ $# -gt 0 ]; do
 
 	'file' | * )
 		[ "$1" = 'file' ] && shift
-		fileName=`playd_fullpath "$1"`
+		FILENAME=`playd_fullpath "$1"`
 
-		if [ -f "$fileName" ]; then
+		if [ -f "$FILENAME" ]; then
 			echo "${1##*.}" | grep -q -i -E -e "^(${PLAYD_FILE_FORMATS})$" \
-				&& playd_playlist_add "$fileName" \
-				|| { file -ib "$fileName" | grep -q -E -e '^(audio|video)' && playd_playlist_add "$fileName"; } \
-				|| { echo "${1##*.}" | grep -q -i -E -e "^($PLAYD_PLAYLIST_FORMATS)$" && playd_import "$fileName"; } \
-				|| playd_warn "\"$fileName\" doesn't seam to be valid file for playback. Ignoring" "to override use:" "  $PLAYD_NAME nocheck $fileName"
-		elif [ -d "$fileName" ]; then
+				&& playd_playlist_add "$FILENAME" \
+				|| { file -ib "$FILENAME" | grep -q -E -e '^(audio|video)' && playd_playlist_add "$FILENAME"; } \
+				|| { echo "${1##*.}" | grep -q -i -E -e "^($PLAYD_PLAYLIST_FORMATS)$" && playd_import "$FILENAME"; } \
+				|| playd_warn "\"$FILENAME\" doesn't seam to be valid file for playback. Ignoring" "to override use:" "  $PLAYD_NAME nocheck $FILENAME"
+		elif [ -d "$FILENAME" ]; then
 			rm -f "$PLAYD_PLAYLIST.tmp"
-			playd_mk_playlist "$fileName"
+			playd_mk_playlist "$FILENAME"
 			playd_playlist_addlist "$PLAYD_PLAYLIST.tmp"
 		else
-			playd_warn "\"$fileName\" doesn't seam to be valid file for playback. Ignoring" 'to override use:' "  $PLAYD_NAME nocheck $fileName"
+			playd_warn "\"$FILENAME\" doesn't seam to be valid file for playback. Ignoring" 'to override use:' "  $PLAYD_NAME nocheck $FILENAME"
 		fi
 		;;
 
