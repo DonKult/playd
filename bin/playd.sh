@@ -59,10 +59,10 @@ playd_die() {	# {{{1
 readonly OS=`uname`
 case $OS in
 *BSD )
-	readonly ESED="sed -E"
+	readonly ESED='sed -E'
 	;;
 * )
-	readonly ESED="sed -r"
+	readonly ESED='sed -r'
 	;;
 esac
 
@@ -86,16 +86,23 @@ readonly MPLAYER_CMD="mplayer $MPLAYER_CMD_GENERIC"
 readonly MPLAYER_SND_ONLY_CMD="mplayer -vo null $MPLAYER_CMD_GENERIC"
 NOVID=0
 NOPLAY=0
-
-playd_help() {	#{{{1
-	man 1 playd
-}	#1}}}
+playd_append=0
+playd_help="man 1 playd"
 
 playd_put() {	# {{{1
 	# put argv into pipe
+	case "$1" in
+		'loadlist' | 'loadfile' )
+			[ -f "$2" ] \
+				&& playd_append=1 \
+				|| { playd_warn "File doesn't exist:" "  $2"; return 1; }
+			;;
+	esac
+
 	playd_check \
 		&& { playd_clean; [ "$1" != 'quit' ] && { playd_start; echo "$*" >> "$PLAYD_PIPE"; }; } \
 		|| echo "$*" >> "$PLAYD_PIPE"
+	return 0
 }	# 1}}}
 
 playd_check() {	# {{{1
@@ -109,8 +116,7 @@ playd_check() {	# {{{1
 
 playd_clean() {	#{{{1
 	# clean files after playd
-	rm -f "$PLAYD_PLAYLIST.tmp"
-	playd_check && rm -f "$PLAYD_PIPE" "$PLAYD_LOCK" "$PLAYD_PLAYLIST.tmp"
+	playd_check && rm -f "$PLAYD_PIPE" "$PLAYD_LOCK" "$PLAYD_HOME"/*.tmp
 }	# 1}}}
 
 playd_start() {	# {{{1
@@ -167,45 +173,60 @@ playd_mk_playlist() {	# {{{1
 
 playd_fullpath() {	# {{{1
 	# echo full path of file/dir
-	# should be used as function
 	case "$1" in
-	/* ) echo "$1";;
-	* ) echo "`pwd`/$1";;
+	/* ) echo "$1" | sed -e 's#//#/#g';;
+	* ) echo "`pwd`/$1" | sed -e 's#//#/#g';;
 	esac
 }	# 1}}}
 
 playd_playlist_add() {	# {{{1
 	#add entry to playlist
 	# arg1 = playlist item
-	playd_put "loadfile '$1' $playd_append"
 	[ $playd_append -eq 1 ] \
-		&& echo "$*" >> "$PLAYD_PLAYLIST" \
-		|| echo "$*" > "$PLAYD_PLAYLIST"
-	playd_append=1
+		&& echo "$1" >> "$PLAYD_PLAYLIST" \
+		|| echo "$1" > "$PLAYD_PLAYLIST"
+	[ $NOPLAY -eq 0 ] && playd_put 'loadfile' "$1" $playd_append
+}	# 1}}}
+
+playd_playlist_addlist() {	# {{{1
+	# add list to playlist
+	# arg1 = playlist item
+	[ $playd_append -eq 1 ] \
+		&& cat "$1" >> "$PLAYD_PLAYLIST" \
+		|| cat "$1" > "$PLAYD_PLAYLIST"
+	[ $NOPLAY -eq 0 ] && playd_put 'loadlist' "$1" $playd_append
 }	# 1}}}
 
 playd_randomise() {	# {{{1
 	# this function will randomise default playlist
-	rm -f "$PLAYD_PLAYLIST.tmp"
-	[ ! -d "$PLAYD_HOME/rand" ] \
-		&& mkdir "$PLAYD_HOME/rand" \
-		|| rm -fR "$PLAYD_HOME/rand"/*
+	# arg1 = list to randomize
+	# at the end echos new list name
+	if [ -f "$1" ]; then
+		list=`echo "$1" | sed 's#^.*/##'`
+		rm -f "$PLAYD_HOME/$list.tmp"
+		[ ! -d "$PLAYD_HOME/rand" ] \
+			&& mkdir "$PLAYD_HOME/rand" \
+			|| rm -fR "$PLAYD_HOME/rand"/*
 
-	i=0
-	cat "$PLAYD_PLAYLIST" | while read item; do
-		echo "$item" > "$PLAYD_HOME/rand/$i"
-		i=$(($i + 1))
-	done
-	
-	i=$(awk 'END { print NR }' "$PLAYD_PLAYLIST")
+		i=0
+		cat "$1" | while read item; do
+			echo "$item" > "$PLAYD_HOME/rand/$i"
+			i=$(($i + 1))
+		done
+		
+		i=$(awk 'END { print NR }' "$1")
 
-	for j in $(jot $i $(($i - 1)) 0 -1); do
-		id=$(jot -r 1 0 $j)
-		cat "$PLAYD_HOME/rand/$id" >> "$PLAYD_PLAYLIST.tmp"
-		mv "$PLAYD_HOME/rand/$j" "$PLAYD_HOME/rand/$id" 2> /dev/null > /dev/null
-	done
-	mv "$PLAYD_PLAYLIST.tmp" "$PLAYD_PLAYLIST"
-	rm -Rf "$PLAYD_HOME/rand"/*
+		for j in $(jot $i $(($i - 1)) 0 -1); do
+			id=$(jot -r 1 0 $j)
+			cat "$PLAYD_HOME/rand/$id" >> "$PLAYD_HOME/$list.tmp"
+			mv "$PLAYD_HOME/rand/$j" "$PLAYD_HOME/rand/$id" 2> /dev/null > /dev/null
+		done
+		rm -Rf "$PLAYD_HOME/rand"/*
+		echo "$PLAYD_HOME/$list.tmp"
+		return 0
+	fi
+	playd_warn "File doesn't exist:" "$1"
+	return 1
 }	# 1}}}
 
 playd_import() {	# {{{1
@@ -258,11 +279,7 @@ playd_import() {	# {{{1
 
 	[ $? -eq 0 ] || return 1
 
-	[ $playd_append -eq 0 ] \
-		&& cp -f "$PLAYD_PLAYLIST.tmp" "$PLAYD_PLAYLIST" \
-		|| cat "$PLAYD_PLAYLIST.tmp" >> "$PLAYD_PLAYLIST"
-	playd_put "loadlist '$PLAYD_PLAYLIST' $playd_append"
-	playd_append=1
+	playd_playlist_addlist "$PLAYD_PLAYLIST.tmp"
 }	# 1}}}
 
 playd_time2s() { # {{{1
@@ -329,7 +346,7 @@ playd_longcat_playlist() { # {{{1
 
 [ -d "$PLAYD_HOME" ] || { mkdir -p "$PLAYD_HOME" || playd_die "Can't create \"$PLAYD_HOME\""; }
 
-[ $# -eq 0 ] && playd_help
+[ $# -eq 0 ] && $playd_help
 
 NOVID=0
 
@@ -341,26 +358,66 @@ fi
 # check command line arguments
 while [ $# -gt 0 ]; do
 	case "$1" in
-	'again' )							playd_put "seek 0 1" ;;
+	'again' )							playd_put 'seek' 0 1 ;;
 	'append' )							playd_warn "$1 should be 1st argument. Ignoring" ;;
 	'cat' )								playd_cat_playlist ;;
 	'cat-favourites' | 'catfav' )		cat "$PLAYD_FAV_PLAYLIST" ;;
 	'filename' | 'fname' )				playd_current_file ;;
-	'help' | '--help' | '-h' )			playd_help ;;
+	'help' | '--help' | '-h' )			$playd_help ;;
 	'list' | 'ls' )						playd_cat_playlist | $PAGER ;;
 	'list-favourites' | 'lsfav' )		$PAGER "$PLAYD_FAV_PLAYLIST" ;;
 	'longcat' | 'lcat' )				playd_longcat_playlist ;;
 	'longlist' | 'llist' )				playd_longcat_playlist | $PAGER ;;
 	'mute' )							playd_put 'mute' ;;
-	'next' )							playd_put "pt_step 1" ;;
+	'next' )							playd_put 'pt_step' 1 ;;
 	'noplay' )							NOPLAY=1 ;;
 	'pause' )							playd_put 'pause' ;;
-	'previous' | 'prev' )				playd_put "pt_step -1" ;;
+	'playlist' )						NOPLAY=0; playd_put 'loadlist' "$PLAYD_PLAYLIST" $playd_append ;;
+	'previous' | 'prev' )				playd_put 'pt_step' -1 ;;
 	'rmlist' )							rm -f "$PLAYD_PLAYLIST" ;;
-	'rnd' | 'randomise' )				playd_randomise ;; 
+	'rnd' | 'randomise' )				mv `playd_randomise "$PLAYD_PLAYLIST"` "$PLAYD_PLAYLIST" ;; 
+	'status' )							playd_check && echo 'playd is not running' || echo "playd is running. PID: $?" ;;
 	'stop')								playd_stop ;;
 	'switch-audio' | 'sw-audio' )		playd_put 'switch_audio' ;;
 	'switch-subtitles' | 'sw-subs' )	playd_put 'sub_select' ;;
+
+	'cmd' )
+		[ -n "$2" ] \
+			&& { playd_put "$2"; shift; } \
+			|| playd_warn "$1 needs argument to pass to mplayer. Ignoring"
+		;;
+
+	'nocheck' )
+		[ -f "$2" ] \
+			&& { playd_playlist_add "$(playd_fullpath "$2")"; shift; } \
+			|| playd_warn "\"$2\" directory. Skipping"
+		;;
+
+	'subtitles' | 'subs' )
+		[ -f "$2" ] \
+			&& { playd_put 'sub_load' "$2"; shift; } \
+			|| playd_warn "\"$2\" isn't subtitle file. Skipping"
+		;;
+
+	'favourite' | 'fav' )
+		playd_current_file >> "$PLAYD_FAV_PLAYLIST"
+		sort "$PLAYD_FAV_PLAYLIST" > "$PLAYD_FAV_PLAYLIST.tmp"
+		uniq "$PLAYD_FAV_PLAYLIST.tmp" > "$PLAYD_FAV_PLAYLIST"
+		rm "$PLAYD_FAV_PLAYLIST.tmp"
+		;;
+
+	'not-favourite' | 'notfav' | '!fav' )
+		if [ -f "$PLAYD_FAV_PLAYLIST" ]; then
+			awk '/^'"`playd_current_file_escaped`"'$/ { next }; /.*/ { print $0 }' "$PLAYD_FAV_PLAYLIST" > "$PLAYD_FAV_PLAYLIST.tmp"
+			mv "$PLAYD_FAV_PLAYLIST.tmp" "$PLAYD_FAV_PLAYLIST"
+		fi
+		;;
+	
+	'play-favourites' | 'playfav' )
+		fn=`playd_randomise "$PLAYD_FAV_PLAYLIST"` \
+			&& { mv $fn "$PLAYD_PLAYLIST"; playd_put 'loadlist' "$PLAYD_PLAYLIST" 0; }
+		;;
+
 
 	'start' \
 	| 'restart' )
@@ -372,14 +429,14 @@ while [ $# -gt 0 ]; do
 
 	'loop' )
 		if [ -n $2 ]; then
-			playd_put "loop $2"
+			playd_put 'loop' $2
 			shift
 		else
 			if [ $2 = 'forever' ]; then
-				playd_put 'loop 0'
+				playd_put 'loop' 0
 				shift
 			else
-				playd_put 'loop -1'
+				playd_put 'loop' -1
 			fi
 		fi
 		;;
@@ -389,9 +446,8 @@ while [ $# -gt 0 ]; do
 			if [ $2 -ne 0 ]; then
 				while [ -n "$2" ]; do
 					if [ $2 -gt 0 ]; then
-						playd_put `awk '{ if (NR == '$2') item = $0 } END { print "loadfile " "\""item"\" '$playd_append'" }' "$PLAYD_PLAYLIST"`
+						playd_put 'loadfile' "`awk '{ if (NR == '$2') print $0 }' "$PLAYD_PLAYLIST"`" $playd_append
 						shift
-						playd_append=1
 					else
 						break
 					fi
@@ -404,21 +460,13 @@ while [ $# -gt 0 ]; do
 		fi
 		;;
 
-	'playlist' )
-		if [ -f "$PLAYD_PLAYLIST" ]; then
-			playd_put "loadlist '$PLAYD_PLAYLIST' $playd_append"
-			playd_append=1
-		else
-			playd_warn "Default playlist doesn't exist."
-		fi
-		;;
 
 	'seek' )
 		if [ $2 ]; then
 			match=0
 			[ $3 = 'abs' -o $3 = 'absolute' ] && match=2
 			[ $3 = '%' -o $3 = 'percent' ] && match=1
-			playd_put "seek `playd_time2s $2` $match"
+			playd_put 'seek' "`playd_time2s $2`" $match
 			[ $match -ne 0 ] && shift
 			shift
 		else
@@ -429,35 +477,20 @@ while [ $# -gt 0 ]; do
 	'jump' )
 		if [ -f "$PLAYD_PLAYLIST" ]; then
 			item_count=`awk 'END { print NR }' $PLAYD_PLAYLIST`
-			if [ "$2" = 'rnd' -o "$2" = 'random' ]; then
-				number=`jot -r 1 0 $item_count`
-				awk 'NR >= '$number' { print $0 }' "$PLAYD_PLAYLIST"  > "$PLAYD_PLAYLIST.tmp"
-				awk 'NR < '$number' { print $0 }' "$PLAYD_PLAYLIST"  >> "$PLAYD_PLAYLIST.tmp"
-				playd_put "loadlist '$PLAYD_PLAYLIST.tmp' 0"
-				playd_append=1
-				shift
-			elif [ $2 -gt 0 ]; then
-				if [ $2 -le $item_count ]; then
-					awk 'NR >= '"$2"' { print $0 }' "$PLAYD_PLAYLIST"  > "$PLAYD_PLAYLIST.tmp"
-					awk 'NR < '"$2"' { print $0 }' "$PLAYD_PLAYLIST"  >> "$PLAYD_PLAYLIST.tmp"
-					playd_put "loadlist '$PLAYD_PLAYLIST.tmp' 0"
-					playd_append=1
-				else
-					playd_warn "Playlist Item number out of range."
-				fi
+			playd_append=0
+			number=$2
+			[ "$2" = 'rnd' -o "$2" = 'random' ] && number=`jot -r 1 0 $item_count`
+			if [ $number -gt 0 -a $number -le $item_count ]; then
+				awk 'NR >= '"$2"' { print $0 }' "$PLAYD_PLAYLIST"  > "$PLAYD_PLAYLIST.tmp"
+				awk 'NR < '"$2"' { print $0 }' "$PLAYD_PLAYLIST"  >> "$PLAYD_PLAYLIST.tmp"
+				playd_put 'loadlist' "$PLAYD_PLAYLIST.tmp" $playd_append
 				shift
 			else
-				playd_warn "Invalid argument for $1. Must be number or 'rnd'."
+				playd_warn "Invalid or out or range Playlist Item number."
 			fi
 		else
 			playd_warn "Default playlist doesn't exist."
 		fi
-		;;
-
-	'status' )
-		playd_check \
-			&& echo 'playd is not running' \
-			|| echo "playd is running. PID: $?"
 		;;
 
 	'cd' \
@@ -476,24 +509,6 @@ while [ $# -gt 0 ]; do
 		fi
 		;;
 
-	'cmd' )
-		[ -n "$2" ] \
-			&& { playd_put "$2"; shift; } \
-			|| playd_warn "$1 needs argument to pass to mplayer. Ignoring"
-		;;
-
-	'nocheck' )
-		[ -f "$2" ] \
-			&& { playd_playlist_add "$(playd_fullpath "$2")"; shift; } \
-			|| playd_warn "\"$2\" directory. Skipping"
-		;;
-
-	'subtitles' | 'subs' )
-		[ -f "$2" ] \
-			&& { playd_put "sub_load '$2'"; shift; } \
-			|| playd_warn "\"$2\" isn't subtitle file. Skipping"
-		;;
-
 	'audio-delay' \
 	| 'brightness' \
 	| 'contrast' \
@@ -506,39 +521,10 @@ while [ $# -gt 0 ]; do
 			command="$1"
 			[ "$1" = 'vol' ] && command='volume'
 			[ "$1" = 'audio-delay' ] && command='audio_delay'
-			playd_put "$command $2 $match"
+			playd_put "$command" "$2" $match
 			shift $((1 + $match))
 		else
 			playd_warn "$1 needs at least numeric argument. Ignoring"
-		fi
-		;;
-	
-	'favourite' | 'fav' )
-		playd_current_file >> "$PLAYD_FAV_PLAYLIST"
-		sort "$PLAYD_FAV_PLAYLIST" > "$PLAYD_FAV_PLAYLIST.tmp"
-		uniq "$PLAYD_FAV_PLAYLIST.tmp" > "$PLAYD_FAV_PLAYLIST"
-		rm "$PLAYD_FAV_PLAYLIST.tmp"
-		;;
-
-	'not-favourite' | 'notfav' | '!fav' )
-		if [ -f "$PLAYD_FAV_PLAYLIST" ]; then
-			awk '/^'"`playd_current_file_escaped`"'$/ { next }; /.*/ { print $0 }' "$PLAYD_FAV_PLAYLIST" > "$PLAYD_FAV_PLAYLIST.tmp"
-			mv "$PLAYD_FAV_PLAYLIST.tmp" "$PLAYD_FAV_PLAYLIST"
-		fi
-		;;
-	
-	'play-favourites' | 'playfav' )
-		if [ -f "$PLAYD_FAV_PLAYLIST" ]; then
-			if [ $playd_append -eq 0 ]; then
-				cp "$PLAYD_FAV_PLAYLIST" "$PLAYD_PLAYLIST"
-			else
-				cat "$PLAYD_FAV_PLAYLIST" >> "$PLAYD_PLAYLIST"
-			fi
-			playd_randomise
-			playd_put "loadlist '$PLAYD_PLAYLIST' 0"
-			playd_append=1
-		else
-			playd_warn "Favourite playlist doesn't exist."
 		fi
 		;;
 	
@@ -558,12 +544,7 @@ while [ $# -gt 0 ]; do
 		elif [ -d "$fileName" ]; then
 			rm -f "$PLAYD_PLAYLIST.tmp"
 			playd_mk_playlist "$fileName"
-			[ $playd_append -eq 1 ] \
-				&& sed -e 's#//#/#g' "$PLAYD_PLAYLIST.tmp" >> "$PLAYD_PLAYLIST" \
-				|| sed -e 's#//#/#g' "$PLAYD_PLAYLIST.tmp" > "$PLAYD_PLAYLIST"
-			rm -f "$PLAYD_PLAYLIST.tmp"
-			[ $NOPLAY -eq 0 ] && playd_put "loadlist '$PLAYD_PLAYLIST' $playd_append"
-			playd_append=1;
+			playd_playlist_addlist "$PLAYD_PLAYLIST.tmp"
 		else
 			playd_warn "\"$fileName\" doesn't seam to be valid file for playback. Ignoring" 'to override use:' "  $PLAYD_NAME nocheck $fileName"
 		fi
