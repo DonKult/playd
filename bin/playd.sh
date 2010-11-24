@@ -445,9 +445,6 @@ while [ $# -gt 0 ]; do
 		fi
 		;;
 
-	# seems buggy
-	# I think there's mplayer bug
-	# after using playd next or playd seek, playd play doesn't work well (if at all)
 	'play' )
 		if [ $2 ]; then
 			if [ $2 -ne 0 ]; then
@@ -477,7 +474,6 @@ while [ $# -gt 0 ]; do
 		fi
 		;;
 
-
 	'seek' )
 		if [ $2 ]; then
 			match=0
@@ -490,7 +486,6 @@ while [ $# -gt 0 ]; do
 			playd_warn "$1 needs numeric argument. Ignoring"
 		fi
 		;;
-
 	
 	'jump' )
 		if [ -f "$PLAYD_PLAYLIST" ]; then
@@ -578,18 +573,19 @@ while [ $# -gt 0 ]; do
 			playd_warn "$1 needs at least numeric argument. Ignoring"
 		fi
 		;;
-
 	
 	'favourite' | 'fav' )
 		playd_current_file >> "$PLAYD_FAV_PLAYLIST"
-		cp "$PLAYD_FAV_PLAYLIST" "$PLAYD_FAV_PLAYLIST.tmp"
-		sort "$PLAYD_FAV_PLAYLIST.tmp" | uniq > "$PLAYD_FAV_PLAYLIST"
+		sort "$PLAYD_FAV_PLAYLIST" > "$PLAYD_FAV_PLAYLIST.tmp"
+		uniq "$PLAYD_FAV_PLAYLIST.tmp" > "$PLAYD_FAV_PLAYLIST"
 		rm "$PLAYD_FAV_PLAYLIST.tmp"
 		;;
 
 	'not-favourite' | 'notfav' | '!fav' )
-		awk '/^'"`playd_current_file_escaped`"'$/ { next }; /.*/ { print $0 }' "$PLAYD_FAV_PLAYLIST" > "$PLAYD_FAV_PLAYLIST.tmp"
-		mv "$PLAYD_FAV_PLAYLIST.tmp" "$PLAYD_FAV_PLAYLIST"
+		if [ -f "$PLAYD_FAV_PLAYLIST" ]; then
+			awk '/^'"`playd_current_file_escaped`"'$/ { next }; /.*/ { print $0 }' "$PLAYD_FAV_PLAYLIST" > "$PLAYD_FAV_PLAYLIST.tmp"
+			mv "$PLAYD_FAV_PLAYLIST.tmp" "$PLAYD_FAV_PLAYLIST"
+		fi
 		;;
 	
 	'play-favourites' | 'playfav' )
