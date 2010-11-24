@@ -58,27 +58,22 @@ playd_die() {	# {{{1
 
 readonly OS=`uname`
 case $OS in
-*BSD )
-	readonly ESED='sed -E'
-	;;
-* )
-	readonly ESED='sed -r'
-	;;
+*BSD )	readonly ESED='sed -E' ;;
+* )		readonly ESED='sed -r' ;;
 esac
 
 readonly PLAYD_HOME="${XDG_CONFIG_HOME:-"$HOME/.config"}/playd"
 # users config file
 [ -f "$PLAYD_HOME/playd.conf" ] && . "$PLAYD_HOME/playd.conf"
 
-PLAYD_PIPE="${PLAYD_PIPE:-$PLAYD_HOME/playd.fifo}"
-PLAYD_PLAYLIST="${PLAYD_PLAYLIST:-$PLAYD_HOME/playlist.plst}"
-PLAYD_FAV_PLAYLIST="${PLAYD_FAV_PLAYLIST:-$PLAYD_HOME/favourite.plst}"
-PLAYD_LOCK="${PLAYD_LOCK:-$PLAYD_HOME/mplayer.lock}"
+PLAYD_PIPE="${PLAYD_PIPE:-"$PLAYD_HOME/playd.fifo"}"
+PLAYD_PLAYLIST="${PLAYD_PLAYLIST:-"$PLAYD_HOME/playlist.plst"}"
+PLAYD_FAV_PLAYLIST="${PLAYD_FAV_PLAYLIST:-"$PLAYD_HOME/favourite.plst"}"
+PLAYD_LOCK="${PLAYD_LOCK:-"$PLAYD_HOME/mplayer.lock"}"
 
 PAGER=${PAGER:-more}
-FORMAT_SHORTNAMES=${FORMAT_SHORTNAMES:-'yes'}
-FORMAT_SPACES=${FORMAT_SPACES:-'yes'}
-
+FORMAT_SHORTNAMES=${FORMAT_SHORTNAMES:-yes}
+FORMAT_SPACES=${FORMAT_SPACES:-yes}
 
 # to customise mplayers command line set PLAYD_MPLAYER_USER_OPTIONS environment variable
 readonly MPLAYER_CMD_GENERIC="$PLAYD_MPLAYER_USER_OPTIONS -msglevel all=-1 -nomsgmodule -idle -input file=$PLAYD_PIPE"
@@ -108,9 +103,7 @@ playd_put() {	# {{{1
 playd_check() {	# {{{1
 	# check if playd daemon is running and return pid
 	# returns 0 if daemon ain't running
-	[ -f "$PLAYD_LOCK" ] \
-		&& local PID=$(pgrep -g `cat $PLAYD_LOCK` -n mplayer) \
-		&& return $PID
+	[ -f "$PLAYD_LOCK" ] && { local PID=$(pgrep -g `cat $PLAYD_LOCK` -n mplayer); return $PID; }
 	return 0
 }	# 1}}}
 
