@@ -79,9 +79,7 @@ FORMAT_SPACES=${FORMAT_SPACES:-yes}
 readonly MPLAYER_CMD_GENERIC="$PLAYD_MPLAYER_USER_OPTIONS -msglevel all=-1 -nomsgmodule -idle -input file=$PLAYD_PIPE"
 readonly MPLAYER_CMD="mplayer $MPLAYER_CMD_GENERIC"
 readonly MPLAYER_SND_ONLY_CMD="mplayer -vo null $MPLAYER_CMD_GENERIC"
-NOVID=0
-NOPLAY=0
-PLAYD_HELP="man 1 playd"
+readonly PLAYD_HELP="man 1 playd"
 
 playd_put() {	# {{{1
 	# put argv into pipe
@@ -332,18 +330,16 @@ playd_longcat_playlist() { # {{{1
 
 # checking for mplayer
 [ "`which mplayer`" ] || playd_die 'mplayer not found'
-
 [ -d "$PLAYD_HOME" ] || { mkdir -p "$PLAYD_HOME" || playd_die "Can't create \"$PLAYD_HOME\""; }
 
-[ $# -eq 0 ] && $PLAYD_HELP
-
 NOVID=0
-
+NOPLAY=0
 [ "$1" = 'append' ] \
 	&& { PLAYD_APPEND=1; shift; } \
 	|| PLAYD_APPEND=0
 
 # check command line arguments
+[ $# -eq 0 ] && $PLAYD_HELP
 while [ $# -gt 0 ]; do
 	case "$1" in
 	'again' )							playd_put 'seek' 0 1 ;;
