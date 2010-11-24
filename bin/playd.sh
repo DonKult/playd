@@ -37,6 +37,7 @@ readonly PLAYD_VERSION='1.15.0'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
+
 playd_warn() {	# {{{1
 	while [ $# -gt 0 ]; do
 		echo "WARN: $1" >&2
@@ -371,6 +372,13 @@ while [ $# -gt 0 ]; do
 			|| playd_warn "$1 needs argument to pass to mplayer. Ignoring"
 		;;
 
+	'sort' )
+		if [ -f "$PLAYD_PLAYLIST" ]; then
+			[ "$2" = 'reverse' -o "$2" = 'rev' ] && { SORT_CMD='sort -r'; shift; } || SORT_CMD='sort'
+			$SORT_CMD "$PLAYD_PLAYLIST" | uniq > "$PLAYD_PLAYLIST.tmp"; mv "$PLAYD_PLAYLIST.tmp" "$PLAYD_PLAYLIST"
+		fi
+		;;
+
 	'nocheck' )
 		[ -f "$2" ] \
 			&& { playd_playlist_add "$(playd_fullpath "$2")"; shift; } \
@@ -401,7 +409,6 @@ while [ $# -gt 0 ]; do
 		FN=`playd_randomise "$PLAYD_FAV_PLAYLIST"` \
 			&& { mv $FN "$PLAYD_PLAYLIST"; playd_put 'loadlist' "$PLAYD_PLAYLIST" 0; }
 		;;
-
 
 	'start' \
 	| 'restart' )
@@ -444,7 +451,6 @@ while [ $# -gt 0 ]; do
 		fi
 		;;
 
-
 	'seek' )
 		if [ $2 ]; then
 			MATCH=0
@@ -465,8 +471,8 @@ while [ $# -gt 0 ]; do
 			NUMBER=$2
 			[ "$2" = 'rnd' -o "$2" = 'random' ] && NUMBER=`jot -r 1 0 $ITEM_COUNT`
 			if [ $NUMBER -gt 0 -a $NUMBER -le $ITEM_COUNT ]; then
-				awk 'NR >= '"$2"' { print $0 }' "$PLAYD_PLAYLIST"  > "$PLAYD_PLAYLIST.tmp"
-				awk 'NR < '"$2"' { print $0 }' "$PLAYD_PLAYLIST"  >> "$PLAYD_PLAYLIST.tmp"
+				awk 'NR >= '"$NUMBER"' { print $0 }' "$PLAYD_PLAYLIST"  > "$PLAYD_PLAYLIST.tmp"
+				awk 'NR < '"$NUMBER"' { print $0 }' "$PLAYD_PLAYLIST"  >> "$PLAYD_PLAYLIST.tmp"
 				playd_put 'loadlist' "$PLAYD_PLAYLIST.tmp" $PLAYD_APPEND
 				shift
 			else

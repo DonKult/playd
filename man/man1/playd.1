@@ -84,6 +84,9 @@ used.
 .Xc
 Adjust audio delay in seconds (relative by default). If
 .Cm absolute
+(or alias
+.Cm abs
+)
 is set, then audio delay will be set exactly to value in seconds.
 .\" }}}
 .\" brightness {{{
@@ -93,6 +96,9 @@ is set, then audio delay will be set exactly to value in seconds.
 .Xc
 Adjust brightness by value (relative by default).  If 
 .Cm absolute
+(or alias
+.Cm abs
+)
 key is specified, brightness will be set to absolute value. Value can be in
 range -100 to 100.
 .\" }}}
@@ -131,6 +137,9 @@ be quoted.
 .Xc
 Adjust contrast by value (relative by default).  If
 .Cm absolute
+(or alias
+.Cm abs
+)
 key is specified, contrast will be set to absolute value. Value can be in
 range -100 to 100.
 .\" }}}
@@ -167,6 +176,10 @@ Display current file name (with full path) that mplayer is playing.
 .Xc
 Adjust gamma by value (relative by default). If
 .Cm absolute
+.Cm absolute
+(or alias
+.Cm abs
+)
 key is specified, gamma will be set to absolute value. Value can be in range
 -100 to 100.
 .\" }}}
@@ -177,14 +190,23 @@ key is specified, gamma will be set to absolute value. Value can be in range
 .Xc
 Adjust hue by value (relative by default).  If
 .Cm absolute
+(or alias
+.Cm abs
+)
 key is specified, hue will be set to absolute value. Value can be in range
 -100 to 100.
 .\" }}}
 .\" jump {{{
 .It Cm jump Xo
-.Ar song_id | random
+.Ar song_id |
+.Cm random
 .Xc
-Jump to song_id or random position in playlist
+Jump to song_id or
+.Cm random
+(alias 
+.Cm rnd
+)
+position in playlist
 .\" }}}
 .\" list {{{
 .It Cm list
@@ -314,18 +336,24 @@ Remove default playlist.
 Adjust saturation by value (relative by default).
 If 
 .Cm absolute
+(or alias
+.Cm abs
+)
 key is specified, saturation will be set to absolute value.
 Value can be in range -100 to 100.
 .\" }}}
 .\" seek {{{
 .It Cm seek Xo 
 .Ar value
-.Op Cm absolute | Cm present
+.Op Cm absolute | Cm percent
 .Xc
 Seek current file to value. If 
 .Cm absolute
+(or alias
+.Cm abs
+)
 is specified, seek to absolute value in seconds. If 
-.Cm present
+.Cm percent
 is specified, seek to value percent. By default mplayer slave will seek
 relative in seconds. You many use modifiers (multipliers) to enter value...
 such as
@@ -336,6 +364,12 @@ For example:
 .Nm 
 .Cm seek
 .Ar -1m30s
+.\" }}}
+.\" sort {{{
+.It Cm sort Xo
+.Op Cm reverse
+.Xc
+Sort or reverse sort playlist (only unique items will remain).
 .\" }}}
 .\" start {{{
 .It Cm start Xo
@@ -381,6 +415,9 @@ Alias:
 .Xc
 Adjust volume by value (relative by default). If 
 .Cm absolute
+(or alias
+.Cm abs
+)
 key is specified, volume will be set to absolute value. Value can be 0 - 100
 .Pp
 NOTE: on FreeBSD mplayer will reset volume after you seek in file. To avoid
