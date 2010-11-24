@@ -81,7 +81,6 @@ readonly MPLAYER_CMD="mplayer $MPLAYER_CMD_GENERIC"
 readonly MPLAYER_SND_ONLY_CMD="mplayer -vo null $MPLAYER_CMD_GENERIC"
 NOVID=0
 NOPLAY=0
-PLAYD_APPEND=0
 PLAYD_HELP="man 1 playd"
 
 playd_put() {	# {{{1
@@ -340,10 +339,9 @@ playd_longcat_playlist() { # {{{1
 
 NOVID=0
 
-if [ "$1" = 'append' ]; then
-	PLAYD_APPEND=1
-	shift
-fi
+[ "$1" = 'append' ] \
+	&& { PLAYD_APPEND=1; shift; } \
+	|| PLAYD_APPEND=0
 
 # check command line arguments
 while [ $# -gt 0 ]; do
