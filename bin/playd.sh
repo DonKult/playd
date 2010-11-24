@@ -33,7 +33,7 @@
 # 1}}}
 # project email: playd@bsdroot.lv
 
-readonly PLAYD_VERSION='1.14.0'
+readonly PLAYD_VERSION='1.14.1'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -667,7 +667,7 @@ while [ $# -gt 0 ]; do
 				cat "$PLAYD_FAV_PLAYLIST" >> "$PLAYD_PLAYLIST"
 			fi
 			playd_randomise
-			playd_put "loadlist '$PLAYD_FAV_PLAYLIST' 0"
+			playd_put "loadlist '$PLAYD_PLAYLIST' 0"
 			playd_append=1
 		else
 			playd_warn "Favourite playlist doesn't exist."
