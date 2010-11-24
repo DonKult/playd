@@ -155,7 +155,7 @@ EOF
 playd_put() {	# {{{1
 	# put argv into pipe
 	playd_check \
-		&& { playd_clean; [ "$1" != "quit" ] && { playd_start; echo "$*" >> "$PLAYD_PIPE"; }; } \
+		&& { playd_clean; [ "$1" != 'quit' ] && { playd_start; echo "$*" >> "$PLAYD_PIPE"; }; } \
 		|| echo "$*" >> "$PLAYD_PIPE"
 }	# 1}}}
 
@@ -176,8 +176,6 @@ playd_clean() {	#{{{1
 
 playd_start() {	# {{{1
 	# start daemon
-	# possible arguments:
-	# console novid (order doesn't matter)
 	playd_check && {
 		[ -p "$PLAYD_PIPE" ] || { mkfifo "$PLAYD_PIPE" || playd_die "Can't create \"$PLAYD_PIPE\""; }
 		cd /
@@ -226,37 +224,6 @@ playd_mk_playlist() {	# {{{1
 			playd_die "What the hell: \"$1/$fileName\""
 		fi
 	done
-}	# 1}}}
-
-playd_match() {	# {{{1
-	# playd match takes at least 4 arguments.
-	# argument count must be even
-	# arg 1 is key we need to find
-	# arg 2 is what we return if we don't find key
-	#---
-	# next argument is what we return when we find key
-	# next argument is quoted list of possible keys
-	#---
-	# etc
-	#=======
-	# check it's usage in source (especially where we want to set volume)
-	if [ $# -ge 4 ]; then
-		if [ $(($# % 2)) -eq 0 ]; then
-			local mkey="$1" # search for key
-			local errVal="$2" # return if not found
-			while [ $# -gt 0 ]; do
-				shift 2
-				for ckey in $2; do
-					[ "$mkey" = "$ckey" ] && { echo "$1"; return; }
-				done
-			done
-			echo "$errVal"
-		else
-			playd_die 'playd_match takes even number of arguments'
-		fi
-	else
-		playd_die 'playd_match takes at least 4 arguments'
-	fi
 }	# 1}}}
 
 playd_fullpath() {	# {{{1
@@ -435,45 +402,33 @@ fi
 # check command line arguments
 while [ $# -gt 0 ]; do
 	case "$1" in
-	'again' )
-		playd_put "seek 0 1" ;;
-	'append' )	
-		playd_warn "$1 should be 1st argument. Ignoring" ;;
-	'help' | '--help' | '-h')
-		playd_help ;;
-	'stop')
-		playd_stop ;;
-	'cat' )
-		playd_cat_playlist ;;
-	'longcat' | 'lcat' )
-		playd_longcat_playlist ;;
-	'list' | 'ls' )
-		playd_cat_playlist | $PAGER ;;
-	'longlist' | 'llist' )
-		playd_longcat_playlist | $PAGER ;;
-	'rmlist' )
-		rm -f "$PLAYD_PLAYLIST" ;;
-	'next' )
-		playd_put "pt_step 1" ;;
-	'previous' | 'prev' )
-		playd_put "pt_step -1" ;;
-	'rnd' | 'randomise' )
-		playd_randomise ;; 
-	'noplay' )
-		NOPLAY=1 ;;
-	'filename' | 'fname' )
-		playd_current_file ;;
-	'list-favourites' | 'lsfav' )
-		$PAGER "$PLAYD_FAV_PLAYLIST" ;;
-	'cat-favourites' | 'catfav' )
-		cat "$PLAYD_FAV_PLAYLIST" ;;
+	'again' )							playd_put "seek 0 1" ;;
+	'append' )							playd_warn "$1 should be 1st argument. Ignoring" ;;
+	'cat' )								playd_cat_playlist ;;
+	'cat-favourites' | 'catfav' )		cat "$PLAYD_FAV_PLAYLIST" ;;
+	'filename' | 'fname' )				playd_current_file ;;
+	'help' | '--help' | '-h' )			playd_help ;;
+	'list' | 'ls' )						playd_cat_playlist | $PAGER ;;
+	'list-favourites' | 'lsfav' )		$PAGER "$PLAYD_FAV_PLAYLIST" ;;
+	'longcat' | 'lcat' )				playd_longcat_playlist ;;
+	'longlist' | 'llist' )				playd_longcat_playlist | $PAGER ;;
+	'mute' )							playd_put 'mute' ;;
+	'next' )							playd_put "pt_step 1" ;;
+	'noplay' )							NOPLAY=1 ;;
+	'pause' )							playd_put 'pause' ;;
+	'previous' | 'prev' )				playd_put "pt_step -1" ;;
+	'rmlist' )							rm -f "$PLAYD_PLAYLIST" ;;
+	'rnd' | 'randomise' )				playd_randomise ;; 
+	'stop')								playd_stop ;;
+	'switch-audio' | 'sw-audio' )		playd_put 'switch_audio' ;;
+	'switch-subtitles' | 'sw-subs' )	playd_put 'sub_select' ;;
 
 	'start' \
 	| 'restart' )
 		[ "$1" = 'restart' ] && playd_stop
 		[ "$2" = 'novid' ] && NOVID=1 || NOVID=0
 		shift $NOVID
-		playd_start $match1 $match2
+		playd_start
 		;;
 
 	'loop' )
@@ -525,7 +480,9 @@ while [ $# -gt 0 ]; do
 
 	'seek' )
 		if [ $2 ]; then
-			match=$(playd_match "$3" 0 2 'abs absolute' 1 '% percent')
+			match=0
+			[ $3 = 'abs' -o $3 = 'absolute' ] && match=2
+			[ $3 = '%' -o $3 = 'percent' ] && match=1
 			playd_put "seek `playd_time2s $2` $match"
 			[ $match -ne 0 ] && shift
 			shift
@@ -576,7 +533,7 @@ while [ $# -gt 0 ]; do
 			if [ $2 -gt 0 ]; then
 				while [ $2 ]; do
 					[ $2 -gt 0 ] \
-						&& { playd_playlist_add "${media}$2"; shift; } \
+						&& { playd_playlist_add "$media$2"; shift; } \
 						|| break
 				done
 			fi
@@ -603,34 +560,23 @@ while [ $# -gt 0 ]; do
 			|| playd_warn "\"$2\" isn't subtitle file. Skipping"
 		;;
 
-	'brightness' \
+	'audio-delay' \
+	| 'brightness' \
 	| 'contrast' \
 	| 'gamma'  \
 	| 'hue' \
 	| 'saturation' \
-	| 'volume' | 'vol' \
-	| 'audio-delay' )
+	| 'volume' | 'vol' )
 		if [ -n $2 ]; then
-			[ "$3" = 'abs' ] && match=1 || match=0
-			playd_put "$(playd_match "$1" "$1" \
-				'volume' 'vol volume' \
-				'audio_delay' 'audio-delay') \
-				$2 $match"
+			[ "$3" = 'abs' -o "$3" = 'absolute' ] && match=1 || match=0
+			command="$1"
+			[ "$1" = 'vol' ] && command='volume'
+			[ "$1" = 'audio-delay' ] && command='audio_delay'
+			playd_put "$command $2 $match"
 			shift $((1 + $match))
 		else
 			playd_warn "$1 needs at least numeric argument. Ignoring"
 		fi
-		;;
-
-	'mute'  \
-	| 'pause' \
-	| 'switch-audio' | 'sw-audio' \
-	| 'switch-subtitles' | 'sw-subs' )
-		playd_put "$(playd_match "$1" "$1" \
-			'mute' 'mute' \
-			'pause' 'pause' \
-			'switch_audio' 'switch-audio sw-audio' \
-			'sub_select' 'switch-subtitles sw-subs')"
 		;;
 
 	
@@ -666,7 +612,7 @@ while [ $# -gt 0 ]; do
 
 	'file' | * )
 		[ "$1" = 'file' ] && shift
-		fileName=$(playd_fullpath "$1")
+		fileName=`playd_fullpath "$1"`
 
 		if [ -f "$fileName" ]; then
 			echo "${1##*.}" | grep -q -i -E -e "^(${PLAYD_FILE_FORMATS})$" \
