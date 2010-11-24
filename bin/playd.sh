@@ -88,68 +88,7 @@ NOVID=0
 NOPLAY=0
 
 playd_help() {	#{{{1
-	# print help
-	$PAGER << EOF
-$PLAYD_NAME (playd.sh) v$PLAYD_VERSION
-by Aldis Berjoza
-http://wiki.bsdroot.lv/playd
-http://hg.bsdroot.lv/pub/aldis/playd.sh
-project e-mail: playd@bsdroot.lv
-
-Special thanks to:
-  * DutchDaemon
-  * blah
-  * john_doe
-  * eye
-from forums.freebsd.org for few lines of sh
-
-
-COMMANDS (long names):
-  again
-  append
-  audio-delay value [ absolute ]
-  brightness value [ absolute ]
-  cat
-  cat-favourites
-  cd [ track ]
-  cmd 'mplayer command'
-  contrast value [ absolute ]
-  dvd [ track ]
-  favourite
-  file [ file | directory ]
-  filename
-  gamma value [ absolute ]
-  hue value [ absolute ]
-  jump song_id | random
-  list
-  list-favourites
-  longcat
-  longlist
-  loop [times]
-  mute
-  next
-  nocheck file
-  not-favourite
-  pause
-  play item1 [ item2 ] ...
-  play-favourites
-  playlist
-  previous
-  randomise
-  restart [ novid ]
-  rmlist
-  saturation value [ absolute ]
-  seek value [ absolute | present ]
-  start [ novid ]
-  status
-  stop
-  subtitles file
-  switch-audio
-  switch-subtitles
-  volume value [ absolute ]
-
-see playd(1) for more info
-EOF
+	man 1 playd
 }	#1}}}
 
 playd_put() {	# {{{1
