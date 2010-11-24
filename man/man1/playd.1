@@ -26,7 +26,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 .\" OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd November 21, 2010
+.Dd November 24, 2010
 .Dt playd 1
 .Os
 .\"#############################################################################
@@ -67,16 +67,17 @@ Commands can be mixed almost in any order. There's only one limit:
 .Cm append
 must be 1st argument, if specified.
 .Bl -tag -width indent
-.\"======================================================================= again
+.\" again {{{
 .It Cm again Xo
 .Xc
 Play current song again.
-.\"====================================================================== append
-.It Cm append Xo
-.Xc
+.\" }}}
+.\" append {{{
+.It Cm append
 Append items to default playlist. Must be first argument on command line if
 used.
-.\"================================================================= audio-delay
+.\" }}}
+.\" audio-delay {{{
 .It Cm audio-delay Xo
 .Ar value
 .Op Cm absolute
@@ -84,20 +85,8 @@ used.
 Adjust audio delay in seconds (relative by default). If
 .Cm absolute
 is set, then audio delay will be set exactly to value in seconds.
-.\"========================================================================== cd
-.It Cm cd Xo
-.Op Ar track
-.Xc
-Play audio CD. (Can't append to playlist)
-.\"========================================================================= cmd
-.It Cm cmd Xo
-.Ar 'mplayer command'
-.Xc
-Send command to mplayer slave directly. If command contains spaces, it should
-be quoted.
-.Pp
-.Lk http://www.mplayerhq.hu/DOCS/tech/slave.txt "Mplayer slave mode protocol"
-.\"================================================================== brightness
+.\" }}}
+.\" brightness {{{
 .It Cm brightness Xo
 .Ar value
 .Op Cm absolute
@@ -106,12 +95,36 @@ Adjust brightness by value (relative by default).  If
 .Cm absolute
 key is specified, brightness will be set to absolute value. Value can be in
 range -100 to 100.
-.\"========================================================================= cat
+.\" }}}
+.\" cat {{{
 .It Cm cat
 This will cat playlist (similar to
 .Cm list
 )
-.\"==================================================================== contrast
+.\" }}}
+.\" cd {{{
+.It Cm cd Xo
+.Op Ar track
+.Xc
+Play audio CD. (Can't append to playlist)
+.\" }}}
+.\" cat-favourites {{{
+.It Cm cat-favourites
+Cat favourite song list
+
+Alias: 
+.Cm catfav
+.\" }}}
+.\" cmd {{{
+.It Cm cmd Xo
+.Ar 'mplayer command'
+.Xc
+Send command to mplayer slave directly. If command contains spaces, it should
+be quoted.
+.Pp
+.Lk http://www.mplayerhq.hu/DOCS/tech/slave.txt "Mplayer slave mode protocol"
+.\" }}}
+.\" contrast {{{
 .It Cm contrast Xo
 .Ar value
 .Op Cm absolute
@@ -120,12 +133,21 @@ Adjust contrast by value (relative by default).  If
 .Cm absolute
 key is specified, contrast will be set to absolute value. Value can be in
 range -100 to 100.
-.\"========================================================================= dvd
+.\" }}}
+.\" dvd {{{
 .It Cm dvd Xo
 .Op Ar track
 .Xc
 Play video DVD. (Can't append to playlist)
-.\"======================================================================== file
+.\" }}}
+.\" favourite {{{
+.It Cm favourite
+Add current song to favourites
+
+Alias:
+.Cm fav
+.\" }}}
+.\" file {{{
 .It Cm file Xo
 .Ar file | directory
 .Xc
@@ -133,10 +155,12 @@ Play file or directory. This option is handy if you have file name that match
 one of
 .Nm
 commands
-.\"==================================================================== filename
+.\" }}}
+.\" filename {{{
 .It Cm filename
 Display current file name (with full path) that mplayer is playing.
-.\"======================================================================= gamma
+.\" }}}
+.\" gamma {{{
 .It Cm gamma Xo
 .Ar value
 .Op Cm absolute
@@ -145,7 +169,8 @@ Adjust gamma by value (relative by default). If
 .Cm absolute
 key is specified, gamma will be set to absolute value. Value can be in range
 -100 to 100.
-.\"========================================================================= hue
+.\" }}}
+.\" hue {{{
 .It Cm hue Xo
 .Ar value
 .Op Cm absolute
@@ -154,34 +179,55 @@ Adjust hue by value (relative by default).  If
 .Cm absolute
 key is specified, hue will be set to absolute value. Value can be in range
 -100 to 100.
-.\"======================================================================== jump
+.\" }}}
+.\" jump {{{
 .It Cm Jump Xo
 .Ar song_id | random
 .Xc
 Jump to song_id or random position in playlist
-.\"======================================================================== list
+.\" }}}
+.\" list {{{
 .It Cm list
 Show default playlist.
-.\"===================================================================== longcat
+
+Alias:
+.Cm ls
+.\" }}}
+.\" list-favourites {{{
+.It Cm list-favourites
+List favourite songs
+
+Alias:
+.Cm lsfav
+.\" }}}
+.\" longcat {{{
 .It Cm longcat
 This will cat playlist (similar to
 .Cm longlist
 )
-.\"==================================================================== longlist
+.\" }}}
+.\" longlist {{{
 .It Cm longlist
 Show default playlist. Each item is displayed with full path.
-.\"======================================================================== loop
+
+Alias:
+.Cm llist
+.\" }}}
+.\" loop {{{
 .It Cm loop Xo
 .Ar count | random
 .Xc
 Loop current song count times. If no argument, given, then don't loop.
-.\"======================================================================== mute
+.\" }}}
+.\" mute {{{
 .It Cm mute
 Mute mplayer slave.
-.\"======================================================================== mext
+.\" }}}
+.\" mext {{{
 .It Cm next
 Play next playlist item.
-.\"===================================================================== nocheck
+.\" }}}
+.\" nocheck {{{
 .It Cm nocheck Xo
 .Ar file
 .Xc
@@ -193,29 +239,45 @@ useful for disk images. Note, that you need to set
 for every file you want
 .Nm
 to skip filetype checks.
-.\"======================================================================= pause
+.\" }}}
+.\" pause {{{
 .It Cm pause
 Pause mplayer slave.
-.\"======================================================================== play
+.\" }}}
+.\" play {{{
 .It Cm play Xo
 .Ar item1
 .Op Ar item2
 .Ar ...
 .Xc
 Play items from default playlist.
-.\"==================================================================== playlist
+.\" }}}
+.\" play-favourites {{{
+.It Cm play-favourites
+Load favourite songs to playlist, randomize, and play.
+
+Alias:
+.Cm playfav
+.\" }}}
+.\" playlist {{{
 .It Cm playlist
 Play default playlist. Mplayer slave will be automatically started if necessary.
-.\"==================================================================== previous
+.\" }}}
+.\" previous {{{
 .It Cm previous
 Play previous playlist item.
-.\"=================================================================== randomise
+.\" }}}
+.\" randomise {{{
 .It Cm randomise
 This will randomise playlist, but won't start playing it... you'll need to run 
 .Nm
 .Cm playlist
 to load new playlist.
-.\"===================================================================== restart
+
+Aldis:
+.Cm rnd
+.\" }}}
+.\" restart {{{
 .It Cm restart Xo
 .Op Cm novid
 .Xc
@@ -233,10 +295,23 @@ and check if everything works. Only send bug report if same problem appears
 after restart. If 
 .Cm novid
 is set, mplayer will only output sound. 
-.\"====================================================================== rmlist
+.\" }}}
+.\" rmlist {{{
 .It Cm rmlist
 Remove default playlist.
-.\"======================================================================== seek
+.\" }}}
+.\" saturation {{{
+.It Cm saturation Xo
+.Ar value
+.Op Cm absolute
+.Xc
+Adjust saturation by value (relative by default).
+If 
+.Cm absolute
+key is specified, saturation will be set to absolute value.
+Value can be in range -100 to 100.
+.\" }}}
+.\" seek {{{
 .It Cm seek Xo 
 .Ar value
 .Op Cm absolute | Cm present
@@ -255,17 +330,8 @@ For example:
 .Nm 
 .Cm seek
 .Ar -1m30s
-.\"================================================================== saturation
-.It Cm saturation Xo
-.Ar value
-.Op Cm absolute
-.Xc
-Adjust saturation by value (relative by default).
-If 
-.Cm absolute
-key is specified, saturation will be set to absolute value.
-Value can be in range -100 to 100.
-.\"======================================================================= start
+.\" }}}
+.\" start {{{
 .It Cm start Xo
 .Op Cm novid
 .Xc
@@ -273,24 +339,36 @@ Start mplayer slave. You won't probably need to use this, because mplayer
 slave is started automatically when needed. If 
 .Cm novid
 is set, mplayer will only output sound.
-.\"====================================================================== status
+.\" }}}
+.\" status {{{
 .It Cm status
 Check if mplayer is started in slave mode.
-.\"=================================================================== subtitles
+.\" }}}
+.\" subtitles {{{
 .It Cm subtitles Xo
 .Ar file
 .Xc
 Load subtitles. This option doesn't check for filetype.
-.\"======================================================================== stop
+.\" }}}
+.\" stop {{{
 .It Cm stop
 Stop mplayer slave.
-.\"================================================================ switch-audio
+.\" }}}
+.\" switch-audio {{{
 .It Cm switch-audio
 Cycle through the available audio tracks. (for DVD)
-.\"============================================================= switch-subtitle
-.It Cm switch-subtitle
+
+Alias:
+.Cm sw-audio
+.\" }}}
+.\" switch-subtitle {{{
+.It Cm switch-subtitles
 Cycle through the available subtitle tracks. (for DVD)
-.\"====================================================================== volume
+
+Alias:
+.Cm sw-subs
+.\" }}}
+.\" volume {{{
 .It Cm volume Xo
 .Ar value
 .Op Cm absolute
@@ -305,47 +383,16 @@ this you should set
 in your
 .Pa /etc/sysctl.conf
 under FreeBSD
-.\"=============================================================================
+
+Alias:
+.Cm vol
+.\" }}}
+.\" file | directory | stream | playlist {{{
 .It Ar file | directory | stream | playlist
 play file, directory, stream or playlist. Mplayer will be automatically
 started in slave mode, if necessary.
+.\" }}}
 .\"=============================================================================
-.El
-.\"#############################################################################
-.Sh "COMMAND ALIASES"
-Every command mentioned above, has alias with
-.Cm --
-prefix
-.Pp
-.Bd -literal -offset indent
-absolute					abs
-append			-a
-cd			-c			cdda
-connection			conn
-dvd			-d
-file			-f
-filename			fname
-help			-h
-list			-l	ls
-longcat				lcat
-longlist		-L	llist
-mute			-m
-next			-n
-pause			-z
-percent						%
-play			-p
-playlist		-P
-previous			prev
-randomise			rnd	
-random				rnd	
-restart			-R
-seek			-s
-stop			-q
-subtitles		-S	subs
-switch-audio			sw-audio
-switch-subtitles		sw-subs
-volume			-v	vol
-.Ed
 .\"#############################################################################
 .Sh ENVIRONMENT
 .Ev PLAYD_MPLAYER_USER_OPTIONS
@@ -464,4 +511,4 @@ it is very handy to put URLs in plst.  Very simple and fast :)
 .\"#############################################################################
 .Sh BUGS
 Probably have some
-.\" vim: set ts=8 sw=8 spell spelllang=en_gb:
+.\" vim: set ts=8 sw=8 spell spelllang=en_gb fdm=marker foldminlines=1:

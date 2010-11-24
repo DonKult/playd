@@ -33,7 +33,7 @@
 # 1}}}
 # project email: playd@bsdroot.lv
 
-readonly PLAYD_VERSION='1.14.1'
+readonly PLAYD_VERSION='1.15.0'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -107,41 +107,46 @@ from forums.freebsd.org for few lines of sh
 COMMANDS (long names):
   again
   append
-  audio-delay value [ --absolute ]
-  brightness value [ --absolute 
+  audio-delay value [ absolute ]
+  brightness value [ absolute ]
   cat
+  cat-favourites
   cd [ track ]
   cmd 'mplayer command'
-  contrast value [ --absolute ]
+  contrast value [ absolute ]
   dvd [ track ]
+  favourite
   file [ file | directory ]
   filename
-  gamma value [ --absolute ]
-  hue value [ --absolute ]
+  gamma value [ absolute ]
+  hue value [ absolute ]
   jump song_id | random
   list
+  list-favourites
   longcat
   longlist
   loop [times]
   mute
   next
   nocheck file
+  not-favourite
   pause
-  play item1 [item2] ...
+  play item1 [ item2 ] ...
+  play-favourites
   playlist
   previous
   randomise
-  restart [ --console ] [ --nofork ]
+  restart [ novid ]
   rmlist
-  saturation value [ --absolute ]
-  seek value [ --absolute | --present ]
-  start [ --console ] [ --nofork ]
+  saturation value [ absolute ]
+  seek value [ absolute | present ]
+  start [ novid ]
   status
   stop
   subtitles file
   switch-audio
-  switch-subtitle
-  volume value [ --absolute ]
+  switch-subtitles
+  volume value [ absolute ]
 
 see playd(1) for more info
 EOF
@@ -422,53 +427,56 @@ playd_longcat_playlist() { # {{{1
 
 NOVID=0
 
-playd_append=$(playd_match "$1" 0 1 'append --append -a')
-[ $playd_append -eq 1 ] && shift
+if [ "$1" = 'append' ]; then
+	playd_append=1
+	shift
+fi
 
 # check command line arguments
 while [ $# -gt 0 ]; do
 	case "$1" in
-	'again' | '--again' )
-		playd_put "seek 0 1"
-		;;
-
-	'append' | '--append' | '-a' )
-		playd_warn "$1 should be 1st argument. Ignoring"
-		;;
-
+	'again' )
+		playd_put "seek 0 1" ;;
+	'append' )	
+		playd_warn "$1 should be 1st argument. Ignoring" ;;
 	'help' | '--help' | '-h')
-		playd_help
-		;;
+		playd_help ;;
+	'stop')
+		playd_stop ;;
+	'cat' )
+		playd_cat_playlist ;;
+	'longcat' | 'lcat' )
+		playd_longcat_playlist ;;
+	'list' | 'ls' )
+		playd_cat_playlist | $PAGER ;;
+	'longlist' | 'llist' )
+		playd_longcat_playlist | $PAGER ;;
+	'rmlist' )
+		rm -f "$PLAYD_PLAYLIST" ;;
+	'next' )
+		playd_put "pt_step 1" ;;
+	'previous' | 'prev' )
+		playd_put "pt_step -1" ;;
+	'rnd' | 'randomise' )
+		playd_randomise ;; 
+	'noplay' )
+		NOPLAY=1 ;;
+	'filename' | 'fname' )
+		playd_current_file ;;
+	'list-favourites' | 'lsfav' )
+		$PAGER "$PLAYD_FAV_PLAYLIST" ;;
+	'cat-favourites' | 'catfav' )
+		cat "$PLAYD_FAV_PLAYLIST" ;;
 
-	'stop' | '--stop' | '-q')
-		playd_stop
-		;;
-
-	'start' | '--start' \
-	| 'restart' | '--restart' | '-R' )
-		[ $(playd_match "$1" '0' '1' 'restart --restart -R') ] && playd_stop
-		NOVID=$(playd_match "$2" '0' '1' 'novid --novid')
+	'start' \
+	| 'restart' )
+		[ "$1" = 'restart' ] && playd_stop
+		[ "$2" = 'novid' ] && NOVID=1 || NOVID=0
 		shift $NOVID
 		playd_start $match1 $match2
 		;;
 
-	'cat' | '--cat' )
-		playd_cat_playlist
-		;;
-
-	'--longcat' | 'longcat' | 'lcat' | '--lcat' )
-		playd_longcat_playlist
-		;;
-
-	'list' | 'ls' | '--list' | '-l' )
-		playd_cat_playlist | $PAGER
-		;;
-
-	'--longlist' | 'longlist' | 'llist' | '--llist' | '-L' )
-		playd_longcat_playlist | $PAGER
-		;;
-
-	'--loop' | 'loop' )
+	'loop' )
 		if [ -n $2 ]; then
 			playd_put "loop $2"
 			shift
@@ -485,7 +493,7 @@ while [ $# -gt 0 ]; do
 	# seems buggy
 	# I think there's mplayer bug
 	# after using playd next or playd seek, playd play doesn't work well (if at all)
-	'play' | '--play' | '-p' )
+	'play' )
 		if [ $2 ]; then
 			if [ $2 -ne 0 ]; then
 				while [ -n "$2" ]; do
@@ -505,7 +513,7 @@ while [ $# -gt 0 ]; do
 		fi
 		;;
 
-	'playlist' | '--playlist' | '-P' )
+	'playlist' )
 		if [ -f "$PLAYD_PLAYLIST" ]; then
 			playd_put "loadlist '$PLAYD_PLAYLIST' $playd_append"
 			playd_append=1
@@ -514,13 +522,10 @@ while [ $# -gt 0 ]; do
 		fi
 		;;
 
-	'rmlist' | '--rmlist' )
-		rm -f "$PLAYD_PLAYLIST"
-		;;
 
-	'seek' | '--seek' | '-s' )
+	'seek' )
 		if [ $2 ]; then
-			match=$(playd_match "$3" 0 2 'abs --absolute absolute' 1 '% --percent percent')
+			match=$(playd_match "$3" 0 2 'abs absolute' 1 '% percent')
 			playd_put "seek `playd_time2s $2` $match"
 			[ $match -ne 0 ] && shift
 			shift
@@ -529,15 +534,8 @@ while [ $# -gt 0 ]; do
 		fi
 		;;
 
-	'next' | '--next' | '-n' )
-		playd_put "pt_step 1"
-		;;
 	
-	'previous' | '--previous' | 'prev' | '--prev' )
-		playd_put "pt_step -1"
-		;;
-	
-	'jump' | '--jump' )
+	'jump' )
 		if [ -f "$PLAYD_PLAYLIST" ]; then
 			item_count=`awk 'END { print NR }' $PLAYD_PLAYLIST`
 			if [ "$2" = 'rnd' -o "$2" = 'random' ]; then
@@ -565,15 +563,15 @@ while [ $# -gt 0 ]; do
 		fi
 		;;
 
-	'status' | '--status' )
+	'status' )
 		playd_check \
 			&& echo 'playd is not running' \
 			|| echo "playd is running. PID: $?"
 		;;
 
-	'cd' | 'cdda' | '--cd' | '-c' \
-	| 'dvd' | '--dvd' | '-d' )
-		media=$(playd_match $1 '0' 'cdda://' 'cd cdda --cd -c' 'dvdnav://' 'dvd --dvd -d')
+	'cd' \
+	| 'dvd' )
+		[ "$1" = 'cd' ] && media='cdda://' || media='dvdnav://'
 		if [ $2 ]; then
 			if [ $2 -gt 0 ]; then
 				while [ $2 ]; do
@@ -587,36 +585,36 @@ while [ $# -gt 0 ]; do
 		fi
 		;;
 
-	'cmd' | '--cmd' )
+	'cmd' )
 		[ -n "$2" ] \
 			&& { playd_put "$2"; shift; } \
 			|| playd_warn "$1 needs argument to pass to mplayer. Ignoring"
 		;;
 
-	'nocheck' | '--nocheck' )
+	'nocheck' )
 		[ -f "$2" ] \
 			&& { playd_playlist_add "$(playd_fullpath "$2")"; shift; } \
 			|| playd_warn "\"$2\" directory. Skipping"
 		;;
 
-	'--subtitles' | 'subtitles' | '--subs' | 'subs' | '-S' )
+	'subtitles' | 'subs' )
 		[ -f "$2" ] \
 			&& { playd_put "sub_load '$2'"; shift; } \
 			|| playd_warn "\"$2\" isn't subtitle file. Skipping"
 		;;
 
-	'brightness' | '--brightness' \
-	| 'contrast' | '--contrast' \
-	| 'gamma' | '--gamma' \
-	| 'hue' | '--hue' \
-	| 'saturation' | '--saturation' \
-	| 'volume' | '--volume' | 'vol' | '-V' | '--vol' \
-	| '--audio-delay' | 'audio-delay' )
+	'brightness' \
+	| 'contrast' \
+	| 'gamma'  \
+	| 'hue' \
+	| 'saturation' \
+	| 'volume' | 'vol' \
+	| 'audio-delay' )
 		if [ -n $2 ]; then
-			match=$(playd_match "$3" 0 1 'abs --absolute absolute')
+			[ "$3" = 'abs' ] && match=1 || match=0
 			playd_put "$(playd_match "$1" "$1" \
-				'volume' 'vol -V --vol volume --volume' \
-				'audio_delay' '--audio-delay audio-delay') \
+				'volume' 'vol volume' \
+				'audio_delay' 'audio-delay') \
 				$2 $match"
 			shift $((1 + $match))
 		else
@@ -624,42 +622,31 @@ while [ $# -gt 0 ]; do
 		fi
 		;;
 
-	'mute' | '--mute' | '-m' \
-	| 'pause' | '--pause' | '-z' \
-	| '--switch-audio' | 'switch-audio' | '--sw-audio' | 'sw-audio' \
-	| '--switch-subtitles' | 'switch-subtitles' | '--sw-subs' | 'sw-subs' )
+	'mute'  \
+	| 'pause' \
+	| 'switch-audio' | 'sw-audio' \
+	| 'switch-subtitles' | 'sw-subs' )
 		playd_put "$(playd_match "$1" "$1" \
-			'mute' 'mute --mute -m' \
-			'pause' 'pause --pause -z' \
-			'switch_audio' '--switch-audio switch-track --sw-audio sw-audio' \
-			'sub_select' '--switch-subtitles switch-subtitles --sw-subs sw-subs')"
+			'mute' 'mute' \
+			'pause' 'pause' \
+			'switch_audio' 'switch-audio sw-audio' \
+			'sub_select' 'switch-subtitles sw-subs')"
 		;;
 
-	'rnd' | '--rnd' | '--randomise' | 'randomise' )
-		playd_randomise
-		;; 
-
-	'noplay' | '--noplay' )
-		NOPLAY=1
-		;;
-
-	'filename' | '--filename' | 'fname' | '--fname' )
-		playd_current_file
-		;;
 	
-	'favourite' | '--favourite' | 'fav' | '--fav' )
+	'favourite' | 'fav' )
 		playd_current_file >> "$PLAYD_FAV_PLAYLIST"
 		cp "$PLAYD_FAV_PLAYLIST" "$PLAYD_FAV_PLAYLIST.tmp"
 		sort "$PLAYD_FAV_PLAYLIST.tmp" | uniq > "$PLAYD_FAV_PLAYLIST"
 		rm "$PLAYD_FAV_PLAYLIST.tmp"
 		;;
 
-	'nofavourite' | '--nofavourite' | 'nofav' | '--nofav' )
+	'not-favourite' | 'notfav' | '!fav' )
 		awk '/^'"`playd_current_file_escaped`"'$/ { next }; /.*/ { print $0 }' "$PLAYD_FAV_PLAYLIST" > "$PLAYD_FAV_PLAYLIST.tmp"
 		mv "$PLAYD_FAV_PLAYLIST.tmp" "$PLAYD_FAV_PLAYLIST"
 		;;
 	
-	'playfavourite' | '--playfavourite' | 'playfav' | '--playfav' )
+	'play-favourites' | 'playfav' )
 		if [ -f "$PLAYD_FAV_PLAYLIST" ]; then
 			if [ $playd_append -eq 0 ]; then
 				cp "$PLAYD_FAV_PLAYLIST" "$PLAYD_PLAYLIST"
@@ -674,16 +661,11 @@ while [ $# -gt 0 ]; do
 		fi
 		;;
 	
-	'listfavourite' | '--listfavourite' | 'lsfav' | '--lsfav' )
-		$PAGER "$PLAYD_FAV_PLAYLIST"
-		;;
-
 	*'://'* )
-		playd_playlist_add "$1"
-		;;
+		playd_playlist_add "$1" ;;
 
-	'file' | '--file' | '-f' | * )
-		[ $(playd_match "$1" 0 1 'file --file -f') -eq 1 ] && shift
+	'file' | * )
+		[ "$1" = 'file' ] && shift
 		fileName=$(playd_fullpath "$1")
 
 		if [ -f "$fileName" ]; then
@@ -691,7 +673,7 @@ while [ $# -gt 0 ]; do
 				&& playd_playlist_add "$fileName" \
 				|| { file -ib "$fileName" | grep -q -E -e '^(audio|video)' && playd_playlist_add "$fileName"; } \
 				|| { echo "${1##*.}" | grep -q -i -E -e "^($PLAYD_PLAYLIST_FORMATS)$" && playd_import "$fileName"; } \
-				|| playd_warn "\"$fileName\" doesn't seam to be valid file for playback. Ignoring" "to override use:" "  playd --nocheck $fileName"
+				|| playd_warn "\"$fileName\" doesn't seam to be valid file for playback. Ignoring" "to override use:" "  $PLAYD_NAME nocheck $fileName"
 		elif [ -d "$fileName" ]; then
 			rm -f "$PLAYD_PLAYLIST.tmp"
 			playd_mk_playlist "$fileName"
@@ -702,7 +684,7 @@ while [ $# -gt 0 ]; do
 			[ $NOPLAY -eq 0 ] && playd_put "loadlist '$PLAYD_PLAYLIST' $playd_append"
 			playd_append=1;
 		else
-			playd_warn "\"$fileName\" doesn't seam to be valid file for playback. Ignoring" 'to override use:' "  playd --nocheck $fileName"
+			playd_warn "\"$fileName\" doesn't seam to be valid file for playback. Ignoring" 'to override use:' "  $PLAYD_NAME nocheck $fileName"
 		fi
 		;;
 
