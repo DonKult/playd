@@ -530,13 +530,13 @@ while [ $# -gt 0 ]; do
 				&& playd_playlist_add "$FILENAME" \
 				|| { file -ib "$FILENAME" | grep -q -E -e '^(audio|video)' && playd_playlist_add "$FILENAME"; } \
 				|| { echo "${1##*.}" | grep -q -i -E -e "^($PLAYD_PLAYLIST_FORMATS)$" && playd_import "$FILENAME"; } \
-				|| playd_warn "\"$FILENAME\" doesn't seam to be valid file for playback. Ignoring" "to override use:" "  $PLAYD_NAME nocheck $FILENAME"
+				|| playd_warn "\"$FILENAME\" doesn't seam to be valid file for playback. Ignoring" "  to override use:" "  $PLAYD_NAME nocheck $FILENAME"
 		elif [ -d "$FILENAME" ]; then
 			rm -f "$PLAYD_PLAYLIST.tmp"
 			playd_mk_playlist "$FILENAME"
 			playd_playlist_addlist "$PLAYD_PLAYLIST.tmp"
 		else
-			playd_warn "\"$FILENAME\" doesn't seam to be valid file for playback. Ignoring" 'to override use:' "  $PLAYD_NAME nocheck $FILENAME"
+			playd_warn "\"$FILENAME\" doesn't seam to be valid file for playback. Ignoring" '  to override use:' "  $PLAYD_NAME nocheck $FILENAME"
 		fi
 		;;
 
