@@ -33,7 +33,7 @@
 # 1}}}
 # project email: playd@bsdroot.lv
 
-readonly PLAYD_VERSION='1.15.0'
+readonly PLAYD_VERSION='1.15.1'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -93,7 +93,7 @@ playd_put() {	# {{{1
 	esac
 
 	playd_check \
-		&& { playd_clean; [ "$1" != 'quit' ] && { playd_start; echo "$*" >> "$PLAYD_PIPE"; }; } \
+		&& { [ "$1" != 'quit' ] && { playd_start; echo "$*" >> "$PLAYD_PIPE"; }; } \
 		|| echo "$*" >> "$PLAYD_PIPE"
 	return 0
 }	# 1}}}
@@ -165,14 +165,15 @@ playd_mk_playlist() {	# {{{1
 playd_fullpath() {	# {{{1
 	# echo full path of file/dir
 	case "$1" in
-	/* ) echo "$1" | sed -e 's#//#/#g';;
-	* ) echo "`pwd`/$1" | sed -e 's#//#/#g';;
+	/* ) echo "$1" | sed -e 's#//#/#g' -e 's#/*$##' ;;
+	* ) echo "`pwd`/$1" | sed -e 's#//#/#g' -e 's#/*$##' ;;
 	esac
 }	# 1}}}
 
 playd_playlist_add() {	# {{{1
 	#add entry to playlist
 	# arg1 = playlist item
+	[ -f "$1" ] || { playd_warn "File doesn't exist:" "  $1"; return 1; }
 	[ $PLAYD_APPEND -eq 1 ] \
 		&& echo "$1" >> "$PLAYD_PLAYLIST" \
 		|| echo "$1" > "$PLAYD_PLAYLIST"
@@ -182,6 +183,7 @@ playd_playlist_add() {	# {{{1
 playd_playlist_addlist() {	# {{{1
 	# add list to playlist
 	# arg1 = playlist item
+	[ -f "$1" ] || { playd_warn "Playlist doesn't exist:" "  $1"; return 1; }
 	[ $PLAYD_APPEND -eq 1 ] \
 		&& cat "$1" >> "$PLAYD_PLAYLIST" \
 		|| cat "$1" > "$PLAYD_PLAYLIST"
