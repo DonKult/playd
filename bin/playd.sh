@@ -33,7 +33,7 @@
 # 1}}}
 # project email: playd@bsdroot.lv
 
-readonly PLAYD_VERSION='1.16.0'
+readonly PLAYD_VERSION='1.16.1'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -447,11 +447,11 @@ while [ $# -gt 0 ]; do
 		;;
 	
 	'loop' )
-		if [ -n $2 ]; then
+		if [ -n "$2" ]; then
 			playd_put 'loop' $2
 			shift
 		else
-			if [ $2 = 'forever' ]; then
+			if [ "$2" = 'forever' ]; then
 				playd_put 'loop' 0
 				shift
 			else
@@ -465,7 +465,7 @@ while [ $# -gt 0 ]; do
 			if [ -f "$PLAYD_POS" ]; then
 				playd_put 'loadlist' "$PLAYD_PLAYLIST" 0
 				POS=`cat "$PLAYD_POS"`
-				[ $POS -gt 1 ] && playd_put 'pt_step' $(($POS - 1))
+				[ "$POS" -gt 1 ] && playd_put 'pt_step' $(($POS - 1))
 			else
 				playd_warn "Previous state not saved."
 			fi
@@ -476,10 +476,10 @@ while [ $# -gt 0 ]; do
 		;;
 
 	'play' )
-		if [ $2 ]; then
-			if [ $2 -ne 0 ]; then
+		if [ "$2" ]; then
+			if [ "$2" -ne 0 ]; then
 				while [ -n "$2" ]; do
-					if [ $2 -gt 0 ]; then
+					if [ "$2" -gt 0 ]; then
 						playd_put 'loadfile' "`awk '{ if (NR == '$2') print $0 }' "$PLAYD_PLAYLIST"`" $PLAYD_APPEND
 						shift
 					else
@@ -495,10 +495,10 @@ while [ $# -gt 0 ]; do
 		;;
 
 	'seek' )
-		if [ $2 ]; then
+		if [ "$2" ]; then
 			MATCH=0
-			[ $3 = 'abs' -o $3 = 'absolute' ] && MATCH=2
-			[ $3 = '%' -o $3 = 'percent' ] && MATCH=1
+			[ "$3" = 'abs' -o "$3" = 'absolute' ] && MATCH=2
+			[ "$3" = '%' -o "$3" = 'percent' ] && MATCH=1
 			playd_put 'seek' "`playd_time2s $2`" $MATCH
 			[ $MATCH -ne 0 ] && shift
 			shift
@@ -529,10 +529,10 @@ while [ $# -gt 0 ]; do
 	'cd' \
 	| 'dvd' )
 		[ "$1" = 'cd' ] && MEDIA='cdda://' || MEDIA='dvdnav://'
-		if [ $2 ]; then
-			if [ $2 -gt 0 ]; then
-				while [ $2 ]; do
-					[ $2 -gt 0 ] \
+		if [ "$2" ]; then
+			if [ "$2" -gt 0 ]; then
+				while [ "$2" ]; do
+					[ "$2" -gt 0 ] \
 						&& { playd_playlist_add "$MEDIA$2"; shift; } \
 						|| break
 				done
@@ -549,7 +549,7 @@ while [ $# -gt 0 ]; do
 	| 'hue' \
 	| 'saturation' \
 	| 'volume' | 'vol' )
-		if [ -n $2 ]; then
+		if [ -n "$2" ]; then
 			[ "$3" = 'abs' -o "$3" = 'absolute' ] && MATCH=1 || MATCH=0
 			COMMAND="$1"
 			[ "$1" = 'vol' ] && COMMAND='volume'
