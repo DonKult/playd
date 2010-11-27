@@ -33,7 +33,7 @@
 # 1}}}
 # project email: playd@bsdroot.lv
 
-readonly PLAYD_VERSION='1.15.1'
+readonly PLAYD_VERSION='1.16.0'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -71,6 +71,7 @@ PLAYD_PIPE="${PLAYD_PIPE:-"$PLAYD_HOME/playd.fifo"}"
 PLAYD_PLAYLIST="${PLAYD_PLAYLIST:-"$PLAYD_HOME/playlist.plst"}"
 PLAYD_FAV_PLAYLIST="${PLAYD_FAV_PLAYLIST:-"$PLAYD_HOME/favourite.plst"}"
 PLAYD_LOCK="${PLAYD_LOCK:-"$PLAYD_HOME/mplayer.lock"}"
+PLAYD_POS="${PLAYD_POS:-"$PLAYD_HOME/playlist.pos"}"
 
 PAGER=${PAGER:-more}
 FORMAT_SHORTNAMES=${FORMAT_SHORTNAMES:-yes}
@@ -176,7 +177,7 @@ playd_playlist_add() {	# {{{1
 	[ -f "$1" ] || { playd_warn "File doesn't exist:" "  $1"; return 1; }
 	[ $PLAYD_APPEND -eq 1 ] \
 		&& echo "$1" >> "$PLAYD_PLAYLIST" \
-		|| echo "$1" > "$PLAYD_PLAYLIST"
+		|| { echo "$1" > "$PLAYD_PLAYLIST"; rm -f "$PLAYD_POS"; }
 	[ $NOPLAY -eq 0 ] && playd_put 'loadfile' "$1" $PLAYD_APPEND
 }	# 1}}}
 
@@ -186,7 +187,7 @@ playd_playlist_addlist() {	# {{{1
 	[ -f "$1" ] || { playd_warn "Playlist doesn't exist:" "  $1"; return 1; }
 	[ $PLAYD_APPEND -eq 1 ] \
 		&& cat "$1" >> "$PLAYD_PLAYLIST" \
-		|| cat "$1" > "$PLAYD_PLAYLIST"
+		|| { cat "$1" > "$PLAYD_PLAYLIST"; rm -f "$PLAYD_POS"; }
 	[ $NOPLAY -eq 0 ] && playd_put 'loadlist' "$1" $PLAYD_APPEND
 }	# 1}}}
 
@@ -325,10 +326,31 @@ playd_cat_playlist() { # {{{1
 playd_longcat_playlist() { # {{{1
 	if [ -f "$PLAYD_PLAYLIST" ]; then
 		local PADDING=`awk 'END { print length(NR) }' $PLAYD_PLAYLIST`
-		awk "/^`playd_current_file_escaped`"'$/ { printf("%0'$PADDING'd|* %s\n", NR, $0); next } /.*/ { printf("%0'$PADDING'd|  %s\n", NR, $0) }' "$PLAYD_PLAYLIST"
+		playd_check 
+		if [ $? -ne 0 ]; then
+			awk "/^`playd_current_file_escaped`"'$/ { printf("%0'$PADDING'd|* %s\n", NR, $0); next } { printf("%0'$PADDING'd|  %s\n", NR, $0) }' "$PLAYD_PLAYLIST"
+		else
+			if [ -f "$PLAYD_POS" ]; then
+				POS=`cat "$PLAYD_POS"`
+				awk 'NR == '$POS' { printf("%0'$PADDING'd|* %s\n", NR, $0); next }; { printf("%0'$PADDING'd|  %s\n", NR, $0) }' "$PLAYD_PLAYLIST"
+			else
+				awk '{ printf("%0'$PADDING'd|  %s\n", NR, $0) }' "$PLAYD_PLAYLIST"
+			fi
+		fi
 	else
 		playd_warn "Default playlist doesn't exist."
 	fi
+} # 1}}}
+
+playd_save_pos() { # {{{1
+	if [ -f "$PLAYD_PLAYLIST" ]; then
+		CURRENT_SONG=`playd_current_file_escaped`
+		if [ "$CURRENT_SONG" != '' ]; then
+			awk 'BEGIN { printed=0 }; /'"$CURRENT_SONG"'/ && printed == 0 { print NR; printed=1 }' "$PLAYD_PLAYLIST" > "$PLAYD_POS"
+			return 0
+		fi
+	fi
+	return 1
 } # 1}}}
 
 # checking for mplayer
@@ -364,9 +386,13 @@ while [ $# -gt 0 ]; do
 	'rmlist' )							rm -f "$PLAYD_PLAYLIST" ;;
 	'rnd' | 'randomise' )				mv `playd_randomise "$PLAYD_PLAYLIST"` "$PLAYD_PLAYLIST" ;; 
 	'status' )							playd_check && echo 'playd is not running' || echo "playd is running. PID: $?" ;;
-	'stop')								playd_stop ;;
 	'switch-audio' | 'sw-audio' )		playd_put 'switch_audio' ;;
 	'switch-subtitles' | 'sw-subs' )	playd_put 'sub_select' ;;
+
+	'stop' | 'save-state' | 'save' )	
+		playd_save_pos || playd_warn "Failed to save sate. mplayer doesn't seem to have opened file, or no default playlist."
+		[ "$1" = 'stop' ] && { playd_stop; exit; }
+		;;
 
 	'cmd' )
 		[ -n "$2" ] \
@@ -419,7 +445,7 @@ while [ $# -gt 0 ]; do
 		shift $NOVID
 		playd_start
 		;;
-
+	
 	'loop' )
 		if [ -n $2 ]; then
 			playd_put 'loop' $2
@@ -431,6 +457,21 @@ while [ $# -gt 0 ]; do
 			else
 				playd_put 'loop' -1
 			fi
+		fi
+		;;
+
+	'restore-sate' | 'restore' )
+		if [ -f "$PLAYD_PLAYLIST" ]; then
+			if [ -f "$PLAYD_POS" ]; then
+				playd_put 'loadlist' "$PLAYD_PLAYLIST" 0
+				POS=`cat "$PLAYD_POS"`
+				[ $POS -gt 1 ] && playd_put 'pt_step' $(($POS - 1))
+			else
+				playd_warn "Previous state not saved."
+			fi
+		else
+			playd_warn "Default playlist doesn't exist"
+			rm -f "$PLAYD_POS"
 		fi
 		;;
 
@@ -546,6 +587,8 @@ while [ $# -gt 0 ]; do
 
 	shift
 done
+
+playd_save_pos
 
 exit 0
 # vim: set ts=4 sw=4 foldminlines=3 fdm=marker:

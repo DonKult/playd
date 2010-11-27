@@ -302,7 +302,7 @@ This will randomise playlist, but won't start playing it... you'll need to run
 .Cm playlist
 to load new playlist.
 .Pp
-Aldis:
+Alias:
 .Cm rnd
 .\" }}}
 .\" restart {{{
@@ -322,11 +322,30 @@ while mplayer doesn't. So if you don't get expected behaviour from
 and check if everything works. Only send bug report if same problem appears
 after restart. If 
 .Cm novid
-is set, mplayer will only output sound. 
+is set, mplayer will only output sound.
+.\" }}}
+.\" restore-state {{{
+.It Cm restore-state
+Restore previous state if possible and start playing music.
+.Pp
+Alias:
+.Cm restore
 .\" }}}
 .\" rmlist {{{
 .It Cm rmlist
 Remove default playlist.
+.\" }}}
+.\" save-state {{{
+.It Cm save-state
+Save playd position in playlist (works well only with playlists, that contain
+unique files).
+Note that playd will save current state every time you call playd.
+Also playd will save state when you exit playd with
+.Cm stop
+command
+.Pp
+Alias:
+.Cm save
 .\" }}}
 .\" saturation {{{
 .It Cm saturation Xo
