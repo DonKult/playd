@@ -332,7 +332,7 @@ playd_longcat_playlist() { # {{{1
 		else
 			if [ -f "$PLAYD_POS" ]; then
 				POS=`cat "$PLAYD_POS"`
-				awk 'NR == '$POS' { printf("%0'$PADDING'd|* %s\n", NR, $0); next }; { printf("%0'$PADDING'd|  %s\n", NR, $0) }' "$PLAYD_PLAYLIST"
+				awk 'NR == '$POS' { printf("%0'$PADDING'd|S %s\n", NR, $0); next }; { printf("%0'$PADDING'd|  %s\n", NR, $0) }' "$PLAYD_PLAYLIST"
 			else
 				awk '{ printf("%0'$PADDING'd|  %s\n", NR, $0) }' "$PLAYD_PLAYLIST"
 			fi
@@ -352,6 +352,10 @@ playd_save_pos() { # {{{1
 	fi
 	return 1
 } # 1}}}
+
+playd_current_file_id() {
+
+}
 
 # checking for mplayer
 [ "`which mplayer`" ] || playd_die 'mplayer not found'
@@ -373,7 +377,7 @@ while [ $# -gt 0 ]; do
 	'cat-favourites' | 'catfav' )		cat "$PLAYD_FAV_PLAYLIST" ;;
 	'filename' | 'fname' )				playd_current_file ;;
 	'help' | '--help' | '-h' )			$PLAYD_HELP ;;
-	'list' | 'ls' )						playd_cat_playlist | $PAGER ;;
+	'list' )							playd_cat_playlist | $PAGER ;;
 	'list-favourites' | 'lsfav' )		$PAGER "$PLAYD_FAV_PLAYLIST" ;;
 	'longcat' | 'lcat' )				playd_longcat_playlist ;;
 	'longlist' | 'llist' )				playd_longcat_playlist | $PAGER ;;
@@ -438,9 +442,8 @@ while [ $# -gt 0 ]; do
 			&& { mv $FN "$PLAYD_PLAYLIST"; playd_put 'loadlist' "$PLAYD_PLAYLIST" 0; }
 		;;
 
-	'start' \
-	| 'restart' )
-		[ "$1" = 'restart' ] && playd_stop
+	'restart' )
+		playd_stop
 		[ "$2" = 'novid' ] && NOVID=1 || NOVID=0
 		shift $NOVID
 		playd_start
@@ -459,15 +462,19 @@ while [ $# -gt 0 ]; do
 			fi
 		fi
 		;;
+	
+	'ls' )
+		;;
 
-	'restore-sate' | 'restore' )
+	'start' )
+		[ "$2" = 'novid' ] && NOVID=1 || NOVID=0
+		shift $NOVID
+		playd_start
 		if [ -f "$PLAYD_PLAYLIST" ]; then
+			playd_put 'loadlist' "$PLAYD_PLAYLIST" 0
 			if [ -f "$PLAYD_POS" ]; then
-				playd_put 'loadlist' "$PLAYD_PLAYLIST" 0
 				POS=`cat "$PLAYD_POS"`
 				[ "$POS" -gt 1 ] && playd_put 'pt_step' $(($POS - 1))
-			else
-				playd_warn "Previous state not saved."
 			fi
 		else
 			playd_warn "Default playlist doesn't exist"

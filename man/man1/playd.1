@@ -26,7 +26,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 .\" OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd November 24, 2010
+.Dd November 28, 2010
 .Dt playd 1
 .Os
 .\"#############################################################################
@@ -324,13 +324,6 @@ after restart. If
 .Cm novid
 is set, mplayer will only output sound.
 .\" }}}
-.\" restore-state {{{
-.It Cm restore-state
-Restore previous state if possible and start playing music.
-.Pp
-Alias:
-.Cm restore
-.\" }}}
 .\" rmlist {{{
 .It Cm rmlist
 Remove default playlist.
@@ -394,8 +387,9 @@ Sort or reverse sort playlist (only unique items will remain).
 .It Cm start Xo
 .Op Cm novid
 .Xc
-Start mplayer slave. You won't probably need to use this, because mplayer
-slave is started automatically when needed. If 
+Start mplayer slave and if previous playlist position was saved, start
+playing from it. If playlist position wasn't saved, but playlist is available
+playd will start playing playlist from the start. If 
 .Cm novid
 is set, mplayer will only output sound.
 .\" }}}
