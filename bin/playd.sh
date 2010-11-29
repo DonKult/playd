@@ -33,7 +33,7 @@
 # 1}}}
 # project email: playd@bsdroot.lv
 
-readonly PLAYD_VERSION='1.18.0'
+readonly PLAYD_VERSION='1.18.1'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -408,7 +408,7 @@ while [ $# -gt 0 ]; do
 	case "$1" in
 	'again' )							playd_put 'seek' 0 1 ;;
 	'append' )							playd_warn "$1 should be 1st argument. Ignoring" ;;
-	'cat' )								playd_cat_playlist | sed -e 's#^\(.\{'`tput cols`'\}\).*#\1#';;
+	'cat' )								playd_cat_playlist ;;
 	'cat-favourites' | 'catfav' )		cat "$PLAYD_FAV_PLAYLIST" ;;
 	'filename' | 'fname' )				playd_current_file ;;
 	'help' | '--help' | '-h' )			$PLAYD_HELP ;;
