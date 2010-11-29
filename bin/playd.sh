@@ -33,7 +33,7 @@
 # 1}}}
 # project email: playd@bsdroot.lv
 
-readonly PLAYD_VERSION='1.17.0'
+readonly PLAYD_VERSION='1.17.1'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -64,21 +64,21 @@ case $OS in
 esac
 
 readonly PLAYD_HOME="${XDG_CONFIG_HOME:-"$HOME/.config"}/playd"
+
 # users config file
 [ -f "$PLAYD_HOME/playd.conf" ] && . "$PLAYD_HOME/playd.conf"
-
-PLAYD_PIPE="${PLAYD_PIPE:-"$PLAYD_HOME/playd.fifo"}"
-PLAYD_PLAYLIST="${PLAYD_PLAYLIST:-"$PLAYD_HOME/playlist.plst"}"
-PLAYD_FAV_PLAYLIST="${PLAYD_FAV_PLAYLIST:-"$PLAYD_HOME/favourite.plst"}"
-PLAYD_LOCK="${PLAYD_LOCK:-"$PLAYD_HOME/mplayer.lock"}"
-PLAYD_POS="${PLAYD_POS:-"$PLAYD_HOME/playlist.pos"}"
-
-PAGER=${PAGER:-more}
-FORMAT_SHORTNAMES=${FORMAT_SHORTNAMES:-yes}
-FORMAT_SPACES=${FORMAT_SPACES:-yes}
-
-LS_PRE_POS=${LS_PRE_POS:-5}
-LS_POST_POS=${LS_POST_POS:-17}
+# user overridable options
+readonly FORMAT_SHORTNAMES="${FORMAT_SHORTNAMES:-"yes"}"
+readonly FORMAT_SPACES="${FORMAT_SPACES:-"yes"}"
+readonly LS_POST_POS="${LS_POST_POS:-"17"}"
+readonly LS_PRE_POS="${LS_PRE_POS:-"5"}"
+readonly PAGER="${PAGER:-"more"}"
+readonly PLAYD_FAV_PLAYLIST="${PLAYD_FAV_PLAYLIST:-"$PLAYD_HOME/favourite.plst"}"
+readonly PLAYD_LOCK="${PLAYD_LOCK:-"$PLAYD_HOME/mplayer.lock"}"
+readonly PLAYD_MPLAYER_USER_OPTIONS="${PLAYD_MPLAYER_USER_OPTIONS:-""}"
+readonly PLAYD_PIPE="${PLAYD_PIPE:-"$PLAYD_HOME/playd.fifo"}"
+readonly PLAYD_PLAYLIST="${PLAYD_PLAYLIST:-"$PLAYD_HOME/playlist.plst"}"
+readonly PLAYD_POS="${PLAYD_POS:-"$PLAYD_HOME/playlist.pos"}"
 
 # to customise mplayers command line set PLAYD_MPLAYER_USER_OPTIONS environment variable
 readonly MPLAYER_CMD_GENERIC="$PLAYD_MPLAYER_USER_OPTIONS -msglevel all=-1 -nomsgmodule -idle -input file=$PLAYD_PIPE"
@@ -308,12 +308,13 @@ playd_cat_playlist() { # {{{1
 					| $ESED \
 						-e 's#/.*/##' \
 						-e 's#_# #g' \
-						-e 's#^[ ]*##' \
 						-e 's# ?- ?[0-9]{1,2} ?- ?# - #' \
 						-e 's#-[0-9]{2}\.# - #' \
 						-e "s#\.($PLAYD_FILE_FORMATS)\$##" \
 						-e 's#\|  (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|  #' \
-						-e 's#\|\* (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|* #'
+						-e 's#\|\* (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|* #' \
+						-e 's#  [ ]*#  #g' \
+						-e 's#\|\* [ ]*#|* #'
 		else
 			if [ $FORMAT_SPACES = 'yes' -o $FORMAT_SPACES = 'YES' ]; then
 				playd_longcat_playlist | sed -e 's#/.*/##' -e 's#_# #g'
@@ -366,12 +367,13 @@ playd_ls() { # {{{1
 			| $ESED \
 				-e 's#/.*/##' \
 				-e 's#_# #g' \
-				-e 's#^[ ]*##' \
 				-e 's# ?- ?[0-9]{1,2} ?- ?# - #' \
 				-e 's#-[0-9]{2}\.# - #' \
 				-e "s#\.($PLAYD_FILE_FORMATS)\$##" \
 				-e 's#\|  (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|  #' \
-				-e 's#\|\* (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|* #'
+				-e 's#\|\* (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|* #' \
+				-e 's#  [ ]*#  #g' \
+				-e 's#\|\* [ ]*#|* #'
 	else
 		playd_warn "Default playlist doesn't exist."
 	fi
@@ -387,10 +389,6 @@ playd_save_pos() { # {{{1
 	fi
 	return 1
 } # 1}}}
-
-playd_current_file_id() {
-
-}
 
 # checking for mplayer
 [ "`which mplayer`" ] || playd_die 'mplayer not found'
