@@ -33,7 +33,7 @@
 # 1}}}
 # project email: playd@bsdroot.lv
 
-readonly PLAYD_VERSION='1.17.1'
+readonly PLAYD_VERSION='1.18.0'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -70,8 +70,6 @@ readonly PLAYD_HOME="${XDG_CONFIG_HOME:-"$HOME/.config"}/playd"
 # user overridable options
 readonly FORMAT_SHORTNAMES="${FORMAT_SHORTNAMES:-"yes"}"
 readonly FORMAT_SPACES="${FORMAT_SPACES:-"yes"}"
-readonly LS_POST_POS="${LS_POST_POS:-"17"}"
-readonly LS_PRE_POS="${LS_PRE_POS:-"5"}"
 readonly PAGER="${PAGER:-"more"}"
 readonly PLAYD_FAV_PLAYLIST="${PLAYD_FAV_PLAYLIST:-"$PLAYD_HOME/favourite.plst"}"
 readonly PLAYD_LOCK="${PLAYD_LOCK:-"$PLAYD_HOME/mplayer.lock"}"
@@ -363,6 +361,10 @@ playd_ls() { # {{{1
 			fi
 		fi
 
+		local SCREEN_H=`tput lines`
+		local LS_PRE_POS=$(($SCREEN_H / 4))
+		local LS_POST_POS=$(($SCREEN_H - 2 - $LS_PRE_POS))
+
 		awk 'NR == '$POS' { printf("%0'$PADDING'd|'$POS_MARKER' %s\n", NR, $0); next }; NR >= '$(($POS - $LS_PRE_POS))' && NR <= '$(($POS + $LS_POST_POS))'{ printf("%0'$PADDING'd|  %s\n", NR, $0) }' "$PLAYD_PLAYLIST" \
 			| $ESED \
 				-e 's#/.*/##' \
@@ -373,7 +375,7 @@ playd_ls() { # {{{1
 				-e 's#\|  (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|  #' \
 				-e 's#\|\* (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|* #' \
 				-e 's#  [ ]*#  #g' \
-				-e 's#\|\* [ ]*#|* #'
+			| sed -e 's#^\(.\{'`tput cols`'\}\).*#\1#'
 	else
 		playd_warn "Default playlist doesn't exist."
 	fi
@@ -406,7 +408,7 @@ while [ $# -gt 0 ]; do
 	case "$1" in
 	'again' )							playd_put 'seek' 0 1 ;;
 	'append' )							playd_warn "$1 should be 1st argument. Ignoring" ;;
-	'cat' )								playd_cat_playlist ;;
+	'cat' )								playd_cat_playlist | sed -e 's#^\(.\{'`tput cols`'\}\).*#\1#';;
 	'cat-favourites' | 'catfav' )		cat "$PLAYD_FAV_PLAYLIST" ;;
 	'filename' | 'fname' )				playd_current_file ;;
 	'help' | '--help' | '-h' )			$PLAYD_HELP ;;
