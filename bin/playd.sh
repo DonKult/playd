@@ -33,7 +33,7 @@
 # 1}}}
 # project email: playd@bsdroot.lv
 
-readonly PLAYD_VERSION='1.16.2'
+readonly PLAYD_VERSION='1.17.0'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -76,6 +76,9 @@ PLAYD_POS="${PLAYD_POS:-"$PLAYD_HOME/playlist.pos"}"
 PAGER=${PAGER:-more}
 FORMAT_SHORTNAMES=${FORMAT_SHORTNAMES:-yes}
 FORMAT_SPACES=${FORMAT_SPACES:-yes}
+
+LS_PRE_POS=${LS_PRE_POS:-5}
+LS_POST_POS=${LS_POST_POS:-17}
 
 # to customise mplayers command line set PLAYD_MPLAYER_USER_OPTIONS environment variable
 readonly MPLAYER_CMD_GENERIC="$PLAYD_MPLAYER_USER_OPTIONS -msglevel all=-1 -nomsgmodule -idle -input file=$PLAYD_PIPE"
@@ -342,6 +345,38 @@ playd_longcat_playlist() { # {{{1
 	fi
 } # 1}}}
 
+playd_ls() { # {{{1
+	if [ -f "$PLAYD_PLAYLIST" ]; then
+		local PADDING=`awk 'END { print length(NR) }' $PLAYD_PLAYLIST`
+		playd_check
+		if [ $? -ne 0 ]; then
+			local CURRENT_FILE="`playd_current_file_escaped`"
+			local POS=`awk 'BEGIN { showed=0 }; /'"$CURRENT_FILE"'/ && showed == 0 { print NR; showed = 1 }' "$PLAYD_PLAYLIST"`
+			local POS_MARKER="*"
+		else
+			if [ -f "$PLAYD_POS" ]; then
+				local POS=`cat "$PLAYD_POS"`
+				local POS_MARKER="S"
+			else
+				local POS=0
+			fi
+		fi
+
+		awk 'NR == '$POS' { printf("%0'$PADDING'd|'$POS_MARKER' %s\n", NR, $0); next }; NR >= '$(($POS - $LS_PRE_POS))' && NR <= '$(($POS + $LS_POST_POS))'{ printf("%0'$PADDING'd|  %s\n", NR, $0) }' "$PLAYD_PLAYLIST" \
+			| $ESED \
+				-e 's#/.*/##' \
+				-e 's#_# #g' \
+				-e 's#^[ ]*##' \
+				-e 's# ?- ?[0-9]{1,2} ?- ?# - #' \
+				-e 's#-[0-9]{2}\.# - #' \
+				-e "s#\.($PLAYD_FILE_FORMATS)\$##" \
+				-e 's#\|  (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|  #' \
+				-e 's#\|\* (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|* #'
+	else
+		playd_warn "Default playlist doesn't exist."
+	fi
+} # }}}
+
 playd_save_pos() { # {{{1
 	if [ -f "$PLAYD_PLAYLIST" ]; then
 		CURRENT_SONG=`playd_current_file_escaped`
@@ -381,6 +416,7 @@ while [ $# -gt 0 ]; do
 	'list-favourites' | 'lsfav' )		$PAGER "$PLAYD_FAV_PLAYLIST" ;;
 	'longcat' | 'lcat' )				playd_longcat_playlist ;;
 	'longlist' | 'llist' )				playd_longcat_playlist | $PAGER ;;
+	'ls' )								playd_ls ;;
 	'mute' )							playd_put 'mute' ;;
 	'next' )							playd_put 'pt_step' 1 ;;
 	'noplay' )							NOPLAY=1 ;;
@@ -461,9 +497,6 @@ while [ $# -gt 0 ]; do
 				playd_put 'loop' -1
 			fi
 		fi
-		;;
-	
-	'ls' )
 		;;
 
 	'start' )
