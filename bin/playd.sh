@@ -33,7 +33,7 @@
 # 1}}}
 # project email: playd@bsdroot.lv
 
-readonly PLAYD_VERSION='1.18.2'
+readonly PLAYD_VERSION='1.18.3'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -363,6 +363,7 @@ playd_ls() { # {{{1
 
 		local SCREEN_H=`tput lines`
 		local LS_PRE_POS=$(($SCREEN_H / 4))
+		[ $LS_PRE_POS -ge $POS ] && LS_PRE_POS=$(($POS - 1))
 		local LS_POST_POS=$(($SCREEN_H - 2 - $LS_PRE_POS))
 
 		awk 'NR == '$POS' { printf("%0'$PADDING'd|'$POS_MARKER' %s\n", NR, $0); next }; NR >= '$(($POS - $LS_PRE_POS))' && NR <= '$(($POS + $LS_POST_POS))'{ printf("%0'$PADDING'd|  %s\n", NR, $0) }' "$PLAYD_PLAYLIST" \
@@ -507,6 +508,7 @@ while [ $# -gt 0 ]; do
 			playd_put 'loadlist' "$PLAYD_PLAYLIST" 0
 			if [ -f "$PLAYD_POS" ]; then
 				POS=`cat "$PLAYD_POS"`
+				sleep 1
 				[ "$POS" -gt 1 ] && playd_put 'pt_step' $(($POS - 1))
 			fi
 		else
