@@ -347,6 +347,7 @@ playd_longcat_playlist() { # {{{1
 playd_ls() { # {{{1
 	if [ -f "$PLAYD_PLAYLIST" ]; then
 		local PADDING=`awk 'END { print length(NR) }' $PLAYD_PLAYLIST`
+		local ITEMS=`awk 'END { print NR }' $PLAYD_PLAYLIST`
 		playd_check
 		if [ $? -ne 0 ]; then
 			local CURRENT_FILE="`playd_current_file_escaped`"
@@ -365,6 +366,7 @@ playd_ls() { # {{{1
 		local LS_PRE_POS=$(($SCREEN_H / 4))
 		[ $LS_PRE_POS -ge $POS ] && LS_PRE_POS=$(($POS - 1))
 		local LS_POST_POS=$(($SCREEN_H - 2 - $LS_PRE_POS))
+		[ $(($LS_POST_POS + $POS)) -gt $ITEMS ] && LS_PRE_POS=$(($LS_PRE_POS + $POS + $LS_POST_POS - $ITEMS))
 
 		awk 'NR == '$POS' { printf("%0'$PADDING'd|'$POS_MARKER' %s\n", NR, $0); next }; NR >= '$(($POS - $LS_PRE_POS))' && NR <= '$(($POS + $LS_POST_POS))'{ printf("%0'$PADDING'd|  %s\n", NR, $0) }' "$PLAYD_PLAYLIST" \
 			| $ESED \
