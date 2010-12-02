@@ -33,7 +33,7 @@
 # 1}}}
 # project email: playd@bsdroot.lv
 
-readonly PLAYD_VERSION='1.18.3'
+readonly PLAYD_VERSION='1.18.4'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -308,7 +308,7 @@ playd_cat_playlist() { # {{{1
 						-e 's#_# #g' \
 						-e 's# ?- ?[0-9]{1,2} ?- ?# - #' \
 						-e 's#-[0-9]{2}\.# - #' \
-						-e "s#\.($PLAYD_FILE_FORMATS)\$##" \
+						-e "s#\.($PLAYD_FILE_FORMATS)\$##I" \
 						-e 's#\|  (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|  #' \
 						-e 's#\|\* (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|* #' \
 						-e 's#  [ ]*#  #g' \
@@ -374,7 +374,7 @@ playd_ls() { # {{{1
 				-e 's#_# #g' \
 				-e 's# ?- ?[0-9]{1,2} ?- ?# - #' \
 				-e 's#-[0-9]{2}\.# - #' \
-				-e "s#\.($PLAYD_FILE_FORMATS)\$##" \
+				-e "s#\.($PLAYD_FILE_FORMATS)\$##I" \
 				-e 's#\|  (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|  #' \
 				-e "s#\|\\$POS_MARKER (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|$POS_MARKER #" \
 				-e 's#  [ ]*#  #g' \
