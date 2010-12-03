@@ -157,7 +157,7 @@ playd_mk_playlist() {	# {{{1
 				&& echo "$FNAME" >> "$PLAYD_PLAYLIST.tmp" \
 				|| { file -ib "$FNAME" | grep -q -E -e '^(audio|video)' && echo "$FNAME" >> "$PLAYD_PLAYLIST.tmp"; }
 		elif [ -d "$1/$FILENAME" ]; then
-			playd_mk_playlist "$1/$FILENAME"
+			find "$1/$FILENAME" -type f | grep -E -i -e "(${PLAYD_FILE_FORMATS})$" >> "$PLAYD_PLAYLIST.tmp"
 		else
 			playd_die "What the hell: \"$1/$FILENAME\""
 		fi
