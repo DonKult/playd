@@ -33,6 +33,11 @@
 # 1}}}
 # project email: playd@bsdroot.lv
 
+# dependancies:
+#   * sqlite3	(databases/sqlite3)
+#	* tagutil	(audio/tagutil)
+#	* mplayer	(multimedia/mplayer)
+
 readonly PLAYD_VERSION='1.19.0'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
@@ -77,6 +82,8 @@ readonly PLAYD_MPLAYER_USER_OPTIONS="${PLAYD_MPLAYER_USER_OPTIONS:-""}"
 readonly PLAYD_PIPE="${PLAYD_PIPE:-"$PLAYD_HOME/playd.fifo"}"
 readonly PLAYD_PLAYLIST="${PLAYD_PLAYLIST:-"$PLAYD_HOME/playlist.plst"}"
 readonly PLAYD_POS="${PLAYD_POS:-"$PLAYD_HOME/playlist.pos"}"
+readonly TEMP="${TEMP:-"/tmp"}"
+readonly LIBRARY_DB="${LIBRARY_DB:-"$PLAYD_HOME/library.db"}"
 
 # to customise mplayers command line set PLAYD_MPLAYER_USER_OPTIONS environment variable
 readonly MPLAYER_CMD_GENERIC="$PLAYD_MPLAYER_USER_OPTIONS -msglevel all=-1 -nomsgmodule -idle -input file=$PLAYD_PIPE"
@@ -392,6 +399,36 @@ playd_save_pos() { # {{{1
 	return 1
 } # 1}}}
 
+playd_init_lib() {	# {{{1
+	# $1 - dir to musci
+	if [ -d "$1" ]; then
+		if [ ! -f "$LIBRARY_DB" ]; then
+			cat > "$TEMP/lib.sql" << EOL
+CREATE TABLE media (
+	filename	TEXT UNIQUE, 
+	title		TEXT,
+	album		TEXT,
+	artist		TEXT,
+	year		INTEGER,
+	genre		TEXT,
+	favourite	INTEGER,
+	jumped_to	INTEGER,
+	loaded		INTEGER,
+	id			INTEGER PRIMARY KEY
+);
+
+EOL
+		else
+			rm -f "$TEMP/lib.sql"
+		fi
+		find "$1" -type f | grep -E -i -e "(${PLAYD_FILE_FORMATS})$" | sed -e "s/'/''/g" -e "s/^/INSERT INTO media (filename) VALUES ('/" -e "s/$/');/" >> "$TEMP/lib.sql"
+		echo 'quit;' >> "$TEMP/lib.sql"
+		sqlite3 -init "$TEMP/lib.sql" "$TEMP/library.db"
+	else
+		playd_die "Not a direcotry: \"$1\""
+	fi
+}	# 1}}}
+
 # checking for mplayer
 [ "`which mplayer`" ] || playd_die 'mplayer not found'
 [ -d "$PLAYD_HOME" ] || { mkdir -p "$PLAYD_HOME" || playd_die "Can't create \"$PLAYD_HOME\""; }
@@ -428,6 +465,12 @@ while [ $# -gt 0 ]; do
 	'status' )							playd_check && echo 'playd is not running' || echo "playd is running. PID: $?" ;;
 	'switch-audio' | 'sw-audio' )		playd_put 'switch_audio' ;;
 	'switch-subtitles' | 'sw-subs' )	playd_put 'sub_select' ;;
+	'info' )							tagutil "`playd_current_file`" ;;
+
+	'make-library' )
+		playd_init_lib "$2"
+		shift
+	;;
 
 	'stop' | 'save-state' | 'save' )	
 		playd_save_pos || playd_warn "Failed to save sate. mplayer doesn't seem to have opened file, or no default playlist."
