@@ -33,7 +33,11 @@
 # 1}}}
 # project email: playd@bsdroot.lv
 
-readonly PLAYD_VERSION='1.19.1'
+readonly PLAYD_VERSION='1.20.0'
+# dependancies:
+#	* tagutil	(audio/tagutil)
+#	* mplayer	(multimedia/mplayer)
+
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -77,6 +81,7 @@ readonly PLAYD_MPLAYER_USER_OPTIONS="${PLAYD_MPLAYER_USER_OPTIONS:-""}"
 readonly PLAYD_PIPE="${PLAYD_PIPE:-"$PLAYD_HOME/playd.fifo"}"
 readonly PLAYD_PLAYLIST="${PLAYD_PLAYLIST:-"$PLAYD_HOME/playlist.plst"}"
 readonly PLAYD_POS="${PLAYD_POS:-"$PLAYD_HOME/playlist.pos"}"
+readonly TEMP="${TEMP:-"/tmp"}"
 
 # to customise mplayers command line set PLAYD_MPLAYER_USER_OPTIONS environment variable
 readonly MPLAYER_CMD_GENERIC="$PLAYD_MPLAYER_USER_OPTIONS -msglevel all=-1 -nomsgmodule -idle -input file=$PLAYD_PIPE"
@@ -428,6 +433,7 @@ while [ $# -gt 0 ]; do
 	'status' )							playd_check && echo 'playd is not running' || echo "playd is running. PID: $?" ;;
 	'switch-audio' | 'sw-audio' )		playd_put 'switch_audio' ;;
 	'switch-subtitles' | 'sw-subs' )	playd_put 'sub_select' ;;
+	'info' )							tagutil "`playd_current_file`" ;;
 
 	'stop' | 'save-state' | 'save' )	
 		playd_save_pos || playd_warn "Failed to save sate. mplayer doesn't seem to have opened file, or no default playlist."
