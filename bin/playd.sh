@@ -33,7 +33,7 @@
 # 1}}}
 # project email: playd@bsdroot.lv
 
-readonly PLAYD_VERSION='1.19.0'
+readonly PLAYD_VERSION='1.19.1'
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|3gp|wm[av]|midi?'
 readonly PLAYD_PLAYLIST_FORMATS='plst?|m3u8?|asx|xspf|ram|qtl|wax|wpl'
@@ -155,7 +155,7 @@ playd_mk_playlist() {	# {{{1
 			&& echo "$1" >> "$PLAYD_PLAYLIST.tmp" \
 			|| { file -ib "$1" | grep -q -E -e '^(audio|video)' && echo "$1" >> "$PLAYD_PLAYLIST.tmp"; }
 	elif [ -d "$1" ]; then
-		find "$1" -type f | grep -E -i -e "(${PLAYD_FILE_FORMATS})$" >> "$PLAYD_PLAYLIST.tmp"
+		find "$1" -type f | grep -E -i -e "(${PLAYD_FILE_FORMATS})$" | sort >> "$PLAYD_PLAYLIST.tmp"
 	else
 		playd_die "What the hell: \"$1\""
 	fi
