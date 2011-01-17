@@ -31,7 +31,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # 1}}}
-# project email: playd@bsdroot.lv
+
+# repository:       http://hg.bsdroot.lv/aldis/playd.sh/
+# bug tracking:     https://bugs.bsdroot.lv/
+# feedback email:   playd@bsdroot.lv
+
 
 readonly PLAYD_VERSION='1.20.0'
 # dependancies:
@@ -434,6 +438,7 @@ while [ $# -gt 0 ]; do
 	'switch-audio' | 'sw-audio' )		playd_put 'switch_audio' ;;
 	'switch-subtitles' | 'sw-subs' )	playd_put 'sub_select' ;;
 	'info' )							tagutil "`playd_current_file`" ;;
+	'version')							echo "$PLAYD_NAME v$PLAYD_VERSION" ;;
 
 	'stop' | 'save-state' | 'save' )	
 		playd_save_pos || playd_warn "Failed to save sate. mplayer doesn't seem to have opened file, or no default playlist."
@@ -575,7 +580,7 @@ while [ $# -gt 0 ]; do
 
 	'cd' \
 	| 'dvd' )
-		[ "$1" = 'cd' ] && MEDIA='cdda://' || MEDIA='dvdnav://'
+		[ "$1" = 'cd' ] && MEDIA='cdda://' || MEDIA='dvd://'
 		if [ "$2" ]; then
 			if [ "$2" -gt 0 ]; then
 				while [ "$2" ]; do
