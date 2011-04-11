@@ -37,7 +37,7 @@
 # feedback email:   playd@bsdroot.lv
 
 
-readonly PLAYD_VERSION='1.20.1'
+readonly PLAYD_VERSION='1.20.2'
 # dependancies:
 #	* tagutil	(audio/tagutil)
 #	* mplayer	(multimedia/mplayer)
@@ -370,7 +370,10 @@ playd_ls() { # {{{1
 
 		local SCREEN_H=`tput lines`
 		local LS_PRE_POS=$(($SCREEN_H / 4))
-		[ ${LS_PRE_POS:-0} -ge ${POS:-0} ] && LS_PRE_POS=$(($POS - 1))
+		LS_PRE_POS=${LS_PRE_POS:-0}
+		SCREEN_H=${SCREEN_H:-24}
+		POS=${POS:-1}
+		[ $LS_PRE_POS -ge $POS ] && LS_PRE_POS=$(($POS - 1))
 		local LS_POST_POS=$(($SCREEN_H - 2 - $LS_PRE_POS))
 		[ $(($LS_POST_POS + $POS)) -gt $ITEMS ] && LS_PRE_POS=$(($LS_PRE_POS + $POS + $LS_POST_POS - $ITEMS))
 
