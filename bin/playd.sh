@@ -37,7 +37,7 @@
 # feedback email:   playd@bsdroot.lv
 
 
-readonly PLAYD_VERSION='1.20.2'
+readonly PLAYD_VERSION='1.20.3'
 # dependancies:
 #	* tagutil	(audio/tagutil)
 #	* mplayer	(multimedia/mplayer)
@@ -422,7 +422,7 @@ while [ $# -gt 0 ]; do
 	'append' )							playd_warn "$1 should be 1st argument. Ignoring" ;;
 	'cat' )								playd_cat_playlist ;;
 	'cat-favourites' | 'catfav' )		cat "$PLAYD_FAV_PLAYLIST" ;;
-	'filename' | 'fname' )				playd_current_file ;;
+	filename' | 'fname' )				playd_current_file ;;
 	'help' | '--help' | '-h' )			$PLAYD_HELP ;;
 	'list' )							playd_cat_playlist | $PAGER ;;
 	'list-favourites' | 'lsfav' )		$PAGER "$PLAYD_FAV_PLAYLIST" ;;
