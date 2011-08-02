@@ -37,10 +37,10 @@
 # feedback email:   playd@bsdroot.lv
 
 
-readonly PLAYD_VERSION='1.20.3'
+readonly PLAYD_VERSION='1.21.0'
 # dependancies:
-#	* tagutil	(audio/tagutil)
 #	* mplayer	(multimedia/mplayer)
+#	* tagutil	(audio/tagutil) [Optional, needed if you want playd info]
 
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|flv|3gp|wm[av]|(m2)?ts'
@@ -59,17 +59,11 @@ playd_die() {	# {{{1
 		echo "ERR: $1" >&2
 		shift
 	done
-	exit 1
+	Exit 1
 }	# 1}}}
 
 # HOME variable must be defined
 [ -z "$HOME" ] && playd_die 'You are homeless. $HOME not defined'
-
-readonly OS=`uname`
-case $OS in
-*BSD )	readonly ESED='sed -E' ;;
-* )		readonly ESED='sed -r' ;;
-esac
 
 readonly PLAYD_HOME="${XDG_CONFIG_HOME:-"$HOME/.config"}/playd"
 
@@ -92,6 +86,8 @@ readonly MPLAYER_CMD_GENERIC="$PLAYD_MPLAYER_USER_OPTIONS -msglevel all=-1 -noms
 readonly MPLAYER_CMD="mplayer $MPLAYER_CMD_GENERIC"
 readonly MPLAYER_SND_ONLY_CMD="mplayer -vo null $MPLAYER_CMD_GENERIC"
 readonly PLAYD_HELP="man 1 playd"
+
+readonly OS=`uname`
 
 playd_put() {	# {{{1
 	# put argv into pipe
@@ -294,7 +290,6 @@ playd_current_file() { # {{{1
 	if [ "$OS" = 'FreeBSD' ]; then
 		procstat -f $pid | sed -n '/ 4 v r r-------/s#.* /#/#p'
 	else
-#		lsof -p $pid | grep -e '4r' | sed -e 's#.* /#/#'
 		lsof -p $pid | sed -n '/4r/s#.* /#/#p'
 	fi
 } # 1}}}
@@ -309,16 +304,17 @@ playd_cat_playlist() { # {{{1
 	if [ -f "$PLAYD_PLAYLIST" ]; then
 		if [ $FORMAT_SHORTNAMES = 'yes' -o $FORMAT_SHORTNAMES = 'YES' ]; then
 				playd_longcat_playlist \
-					| $ESED \
-						-e 's#/.*/##' \
-						-e 's#_# #g' \
-						-e 's# ?- ?[0-9]{1,2} ?- ?# - #' \
-						-e 's#-[0-9]{2}\.# - #' \
-						-e "s#\.($PLAYD_FILE_FORMATS)\$##I" \
-						-e 's#\|  (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|  #' \
-						-e 's#\|\* (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|* #' \
-						-e 's#  [ ]*#  #g' \
-						-e 's#\|\* [ ]*#|* #'
+					| awk '
+{
+	sub(/\/.*\//, "", $0)
+	gsub(/_/, " ", $0)
+	gsub(/   [ ]*/, " ", $0)
+	sub(/\|  ([12]-)?[0-9][0-9]\.?[ ]?-?[ ]?/, "|  ", $0)
+	sub(/\|\* ([12]-)?[0-9][0-9]\.?[ ]?-?[ ]?/, "|* ", $0)
+	sub(/\.('$PLAYD_FILE_FORMATS')$/, "", $0)
+	print $0
+}
+'
 		else
 			if [ $FORMAT_SPACES = 'yes' -o $FORMAT_SPACES = 'YES' ]; then
 				playd_longcat_playlist | sed -e 's#/.*/##' -e 's#_# #g'
@@ -368,6 +364,7 @@ playd_ls() { # {{{1
 			fi
 		fi
 
+		local SCREEN_W=`tput cols`
 		local SCREEN_H=`tput lines`
 		local LS_PRE_POS=$(($SCREEN_H / 4))
 		LS_PRE_POS=${LS_PRE_POS:-0}
@@ -376,32 +373,44 @@ playd_ls() { # {{{1
 		[ $LS_PRE_POS -ge $POS ] && LS_PRE_POS=$(($POS - 1))
 		local LS_POST_POS=$(($SCREEN_H - 2 - $LS_PRE_POS))
 		[ $(($LS_POST_POS + $POS)) -gt $ITEMS ] && LS_PRE_POS=$(($LS_PRE_POS + $POS + $LS_POST_POS - $ITEMS))
+		awk '
+NR >= '$(($POS-$LS_PRE_POS))' && NR <= '$(($POS+$LS_POST_POS))' {
+		sub(/\/.*\//, "", $0)
+		gsub(/_/, " ", $0)
+		gsub(/   [ ]*/, " ", $0)
+		sub(/^([12]-)?[0-9][0-9]\.?[ ]?-?[ ]?/, "", $0)
+		sub(/\.('$PLAYD_FILE_FORMATS')$/, "", $0)
 
-		awk 'NR == '$POS' { printf("%0'$PADDING'd|'$POS_MARKER' %s\n", NR, $0); next }; NR >= '$(($POS - $LS_PRE_POS))' && NR <= '$(($POS + $LS_POST_POS))'{ printf("%0'$PADDING'd|  %s\n", NR, $0) }' "$PLAYD_PLAYLIST" \
-			| $ESED \
-				-e 's#/.*/##' \
-				-e 's#_# #g' \
-				-e 's#[ ]?-[ ]?[0-9]{1,2}[ ]?-[ ]?# - #' \
-				-e 's#-[0-9]{2}\.# - #' \
-				-e "s#\.($PLAYD_FILE_FORMATS)\$##I" \
-				-e 's#\|  (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|  #' \
-				-e "s#\|\\$POS_MARKER (([0-9][ -]?)?[0-9]{1,2}( - |\. |-|\.| ))?#|$POS_MARKER #" \
-				-e 's#  [ ]*#  #g' \
-			| sed -e 's#^\(.\{'`tput cols`'\}\).*#\1#'
+		if (NR != '$POS') {
+			OUT=sprintf("%0'$PADDING'd|  %s", NR, $0)
+		} else {
+			OUT=sprintf("%0'$PADDING'd|'$POS_MARKER' %s", NR, $0)
+		}
+
+		print substr(OUT, 1, '$SCREEN_W')
+}
+' "$PLAYD_PLAYLIST"
 	else
 		playd_warn "Default playlist doesn't exist."
 	fi
 } # }}}
 
 playd_save_pos() { # {{{1
-	if [ -f "$PLAYD_PLAYLIST" ]; then
-		CURRENT_SONG=`playd_current_file_escaped`
-		if [ "$CURRENT_SONG" != '' ]; then
-			awk 'BEGIN { printed=0 }; /'"$CURRENT_SONG"'/ && printed == 0 { print NR; printed=1 }' "$PLAYD_PLAYLIST" > "$PLAYD_POS"
-			return 0
+	playd_check || {
+		if [ -f "$PLAYD_PLAYLIST" ]; then
+			CURRENT_SONG=`playd_current_file_escaped`
+			if [ "$CURRENT_SONG" != '' ]; then
+				awk 'BEGIN { printed=0 }; /'"$CURRENT_SONG"'/ && printed == 0 { print NR; printed=1 }' "$PLAYD_PLAYLIST" > "$PLAYD_POS"
+				return 0
+			fi
 		fi
-	fi
-	return 1
+		return 1
+	}
+} # 1}}}
+
+Exit() { # {{{1
+	playd_save_pos
+	exit $1
 } # 1}}}
 
 # checking for mplayer
@@ -422,8 +431,9 @@ while [ $# -gt 0 ]; do
 	'append' )							playd_warn "$1 should be 1st argument. Ignoring" ;;
 	'cat' )								playd_cat_playlist ;;
 	'cat-favourites' | 'catfav' )		cat "$PLAYD_FAV_PLAYLIST" ;;
-	filename' | 'fname' )				playd_current_file ;;
+	'filename' | 'fname' )				playd_current_file ;;
 	'help' | '--help' | '-h' )			$PLAYD_HELP ;;
+	'info' )							tagutil "`playd_current_file`" ;;
 	'list' )							playd_cat_playlist | $PAGER ;;
 	'list-favourites' | 'lsfav' )		$PAGER "$PLAYD_FAV_PLAYLIST" ;;
 	'longcat' | 'lcat' )				playd_longcat_playlist ;;
@@ -437,15 +447,16 @@ while [ $# -gt 0 ]; do
 	'previous' | 'prev' )				playd_put 'pt_step' -1 ;;
 	'rmlist' )							rm -f "$PLAYD_PLAYLIST" ;;
 	'rnd' | 'randomise' )				mv `playd_randomise "$PLAYD_PLAYLIST"` "$PLAYD_PLAYLIST" ;; 
+	'save-state' | 'save' )				playd_save_pos || playd_warn "Failed to save sate." ;;
 	'status' )							playd_check && echo 'playd is not running' || echo "playd is running. PID: $?" ;;
 	'switch-audio' | 'sw-audio' )		playd_put 'switch_audio' ;;
 	'switch-subtitles' | 'sw-subs' )	playd_put 'sub_select' ;;
-	'info' )							tagutil "`playd_current_file`" ;;
-	'version')							echo "$PLAYD_NAME v$PLAYD_VERSION" ;;
+	'version')							echo "$PLAYD_NAME v$PLAYD_VERSION" ;; 
 
-	'stop' | 'save-state' | 'save' )	
-		playd_save_pos || playd_warn "Failed to save sate. mplayer doesn't seem to have opened file, or no default playlist."
-		[ "$1" = 'stop' ] && { playd_stop; exit; }
+	'stop' )
+		playd_save_pos
+		playd_stop
+		Exit
 		;;
 
 	'cmd' )
@@ -645,7 +656,5 @@ while [ $# -gt 0 ]; do
 	shift
 done
 
-playd_save_pos
-
-exit 0
+Exit 0
 # vim: set ts=4 sw=4 foldminlines=3 fdm=marker:
