@@ -37,7 +37,7 @@
 # feedback email:   playd@bsdroot.lv
 
 
-readonly PLAYD_VERSION='1.21.0'
+readonly PLAYD_VERSION='1.21.1'
 # dependancies:
 #	* mplayer	(multimedia/mplayer)
 #	* tagutil	(audio/tagutil) [Optional, needed if you want playd info]
@@ -88,6 +88,15 @@ readonly MPLAYER_SND_ONLY_CMD="mplayer -vo null $MPLAYER_CMD_GENERIC"
 readonly PLAYD_HELP="man 1 playd"
 
 readonly OS=`uname`
+
+case $OS in
+	'FreeBSD' )
+		ESED='sed -E'
+		;;
+	* )
+		ESED='sed -r'
+		;;
+esac
 
 playd_put() {	# {{{1
 	# put argv into pipe
@@ -311,10 +320,8 @@ playd_cat_playlist() { # {{{1
 	gsub(/   [ ]*/, " ", $0)
 	sub(/\|  ([12]-)?[0-9][0-9]\.?[ ]?-?[ ]?/, "|  ", $0)
 	sub(/\|\* ([12]-)?[0-9][0-9]\.?[ ]?-?[ ]?/, "|* ", $0)
-	sub(/\.('$PLAYD_FILE_FORMATS')$/, "", $0)
 	print $0
-}
-'
+}' | $ESED -e 's/\.('$PLAYD_FILE_FORMATS')$//I'
 		else
 			if [ $FORMAT_SPACES = 'yes' -o $FORMAT_SPACES = 'YES' ]; then
 				playd_longcat_playlist | sed -e 's#/.*/##' -e 's#_# #g'
@@ -379,7 +386,6 @@ NR >= '$(($POS-$LS_PRE_POS))' && NR <= '$(($POS+$LS_POST_POS))' {
 		gsub(/_/, " ", $0)
 		gsub(/   [ ]*/, " ", $0)
 		sub(/^([12]-)?[0-9][0-9]\.?[ ]?-?[ ]?/, "", $0)
-		sub(/\.('$PLAYD_FILE_FORMATS')$/, "", $0)
 
 		if (NR != '$POS') {
 			OUT=sprintf("%0'$PADDING'd|  %s", NR, $0)
@@ -389,7 +395,7 @@ NR >= '$(($POS-$LS_PRE_POS))' && NR <= '$(($POS+$LS_POST_POS))' {
 
 		print substr(OUT, 1, '$SCREEN_W')
 }
-' "$PLAYD_PLAYLIST"
+' "$PLAYD_PLAYLIST" | $ESED -e 's/\.('$PLAYD_FILE_FORMATS')$//I'
 	else
 		playd_warn "Default playlist doesn't exist."
 	fi
