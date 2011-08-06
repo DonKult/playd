@@ -37,7 +37,7 @@
 # feedback email:   playd@bsdroot.lv
 
 
-readonly PLAYD_VERSION='1.21.2'
+readonly PLAYD_VERSION='1.22.0'
 # dependancies:
 #	* mplayer	(multimedia/mplayer)
 #	* tagutil	(audio/tagutil) [Optional, needed if you want playd info]
@@ -75,7 +75,6 @@ readonly FORMAT_SHORTNAMES="${FORMAT_SHORTNAMES:-"yes"}"
 readonly FORMAT_SPACES="${FORMAT_SPACES:-"yes"}"
 readonly PAGER="${PAGER:-"more"}"
 readonly PLAYD_FAV_PLAYLIST="${PLAYD_FAV_PLAYLIST:-"$PLAYD_HOME/favourite.plst"}"
-readonly PLAYD_LOCK="${PLAYD_LOCK:-"$PLAYD_HOME/mplayer.lock"}"
 readonly PLAYD_MPLAYER_USER_OPTIONS="${PLAYD_MPLAYER_USER_OPTIONS:-""}"
 readonly PLAYD_PIPE="${PLAYD_PIPE:-"$PLAYD_HOME/playd.fifo"}"
 readonly PLAYD_PLAYLIST="${PLAYD_PLAYLIST:-"$PLAYD_HOME/playlist.plst"}"
@@ -118,13 +117,12 @@ playd_put() {	# {{{1
 playd_check() {	# {{{1
 	# check if playd daemon is running and return pid
 	# returns 0 if daemon ain't running
-	[ -f "$PLAYD_LOCK" ] && { local PID=$(pgrep -g `cat $PLAYD_LOCK` -n mplayer); return $PID; }
-	return 0
+	return `ps -wwax | grep -e " mplayer .* -idle -input file=$PLAYD_PIPE$" | grep -E -v -e ' grep ' | awk '{print $1}'`
 }	# 1}}}
 
 playd_clean() {	#{{{1
 	# clean files after playd
-	playd_check && rm -f "$PLAYD_PIPE" "$PLAYD_LOCK" "$PLAYD_HOME"/*.tmp
+	playd_check && rm -f "$PLAYD_PIPE" "$PLAYD_HOME"/*.tmp
 }	# 1}}}
 
 playd_start() {	# {{{1
@@ -136,8 +134,7 @@ playd_start() {	# {{{1
 			&& local MPLAYER_RUN_CMD="$MPLAYER_CMD" \
 			|| local MPLAYER_RUN_CMD="$MPLAYER_SND_ONLY_CMD"
 
-		{ $MPLAYER_RUN_CMD > /dev/null 2> /dev/null & } \
-			&& echo "$$" > "$PLAYD_LOCK" \
+		{ exec $MPLAYER_RUN_CMD > /dev/null 2> /dev/null & } \
 			|| playd_die 'Failed to start mplayer'
 		cd - > /dev/null 2> /dev/null
 	}
@@ -423,6 +420,7 @@ Exit() { # {{{1
 playd_edit_playlist() { # {{{1
 	# arg1 playlist to edit
 	${EDITOR:-vi} "$1"
+	playd_clean_playlist "$1"
 	# TODO: add checks
 	#playd_put 'loadlist' "$PLAYD_PLAYLIST" "0"
 } # 1}}}
