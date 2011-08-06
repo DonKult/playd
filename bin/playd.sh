@@ -37,10 +37,11 @@
 # feedback email:   playd@bsdroot.lv
 
 
-readonly PLAYD_VERSION='1.21.1'
+readonly PLAYD_VERSION='1.21.2'
 # dependancies:
 #	* mplayer	(multimedia/mplayer)
 #	* tagutil	(audio/tagutil) [Optional, needed if you want playd info]
+#	* jot		(Included in FreeBSD)
 
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|flv|3gp|wm[av]|(m2)?ts'
@@ -419,6 +420,22 @@ Exit() { # {{{1
 	exit $1
 } # 1}}}
 
+playd_edit_playlist() { # {{{1
+	# arg1 playlist to edit
+	${EDITOR:-vi} "$1"
+	# TODO: add checks
+	#playd_put 'loadlist' "$PLAYD_PLAYLIST" "0"
+} # 1}}}
+
+playd_clean_playlist() { #{{{1
+	# arg1 - playlist to clean
+	rm -f "$1.tmp"
+	cat "$1" | while read item; do
+		[ -r "$item" ] && echo "$item" >> "$1.tmp"
+	done
+	mv "$1.tmp" "$1"
+} # 1}}}
+
 # checking for mplayer
 [ "`which mplayer`" ] || playd_die 'mplayer not found'
 [ -d "$PLAYD_HOME" ] || { mkdir -p "$PLAYD_HOME" || playd_die "Can't create \"$PLAYD_HOME\""; }
@@ -437,6 +454,10 @@ while [ $# -gt 0 ]; do
 	'append' )							playd_warn "$1 should be 1st argument. Ignoring" ;;
 	'cat' )								playd_cat_playlist ;;
 	'cat-favourites' | 'catfav' )		cat "$PLAYD_FAV_PLAYLIST" ;;
+	'clean' )							playd_clean_playlist "$PLAYD_PLAYLIST" ;;
+	'clean-favourite' | 'cleanfav' )	playd_clean_playlist "$PLAYD_FAV_PLAYLIST" ;;
+	'edit' )							playd_edit_playlist "$PLAYD_PLAYLIST" ;;
+	'edit-favourite' | 'editfav' )		playd_edit_playlist "$PLAYD_PLAYLIST" ;;
 	'filename' | 'fname' )				playd_current_file ;;
 	'help' | '--help' | '-h' )			$PLAYD_HELP ;;
 	'info' )							tagutil "`playd_current_file`" ;;
