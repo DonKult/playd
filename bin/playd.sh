@@ -37,7 +37,7 @@
 # feedback email:   playd@bsdroot.lv
 
 
-readonly PLAYD_VERSION='1.22.0'
+readonly PLAYD_VERSION='1.22.1'
 # dependancies:
 #	* mplayer	(multimedia/mplayer)
 #	* tagutil	(audio/tagutil) [Optional, needed if you want playd info]
@@ -457,8 +457,10 @@ while [ $# -gt 0 ]; do
 	'edit' )							playd_edit_playlist "$PLAYD_PLAYLIST" ;;
 	'edit-favourite' | 'editfav' )		playd_edit_playlist "$PLAYD_PLAYLIST" ;;
 	'filename' | 'fname' )				playd_current_file ;;
+	'grep' )							playd_cat_playlist | egrep -i "$2"; shift ;;
 	'help' | '--help' | '-h' )			$PLAYD_HELP ;;
 	'info' )							tagutil "`playd_current_file`" ;;
+	'lgrep' )							playd_longcat_playlist | egrep -i "$2"; shift ;;
 	'list' )							playd_cat_playlist | $PAGER ;;
 	'list-favourites' | 'lsfav' )		$PAGER "$PLAYD_FAV_PLAYLIST" ;;
 	'longcat' | 'lcat' )				playd_longcat_playlist ;;

@@ -26,7 +26,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 .\" OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd August 6, 2011
+.Dd August 31, 2011
 .Dt playd 1
 .Os
 .\"#############################################################################
@@ -205,6 +205,13 @@ Adjust gamma by value (relative by default). If
 key is specified, gamma will be set to absolute value. Value can be in range
 -100 to 100.
 .\" }}}
+.\" grep {{{
+.It Cm grep Xo
+.Ar patter
+.Xc
+grep playlist. This is equivalent to
+.Dl playd cat | egrep -i pattern
+.\" }}}
 .\" hue {{{
 .It Cm hue Xo
 .Ar value
@@ -233,6 +240,14 @@ Jump to song_id or
 .Cm rnd
 )
 position in playlist
+.\" }}}
+.\" lgrep {{{
+.It Cm lgrep Xo
+.Ar patter
+.Xc
+grep playlist. This is equivalent to
+.Dl playd lcat | egrep -i pattern
+)
 .\" }}}
 .\" list {{{
 .It Cm list
