@@ -295,9 +295,9 @@ playd_current_file() { # {{{1
 	pid=$?
 	[ $pid -ne 0 ] || return
 	if [ "$OS" = 'FreeBSD' ]; then
-		procstat -f $pid | sed -n '/ 4 v r r-------/s#.* /#/#p'
+		procstat -f $pid | sed -n '/[0-9] v r r-------/s#.* /#/#p'
 	else
-		lsof -p $pid | sed -n '/4r/s#.* /#/#p'
+		lsof -p $pid | sed -n '/[0-9]r  VREG /s#.* /#/#p'
 	fi
 } # 1}}}
 
