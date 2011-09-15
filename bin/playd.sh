@@ -34,7 +34,7 @@
 
 # repository:       https://github.com/graudeejs/playd
 
-readonly PLAYD_VERSION='1.22.1'
+readonly PLAYD_VERSION='1.22.2'
 # dependancies:
 #	* mplayer	(multimedia/mplayer)
 #	* tagutil	(audio/tagutil) [Optional, needed if you want playd info]
