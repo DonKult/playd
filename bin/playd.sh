@@ -1,7 +1,7 @@
 #!/bin/sh
 # License {{{1
 #
-# Copyright (c) 2009-2010, Aldis Berjoza <aldis@bsdroot.lv>
+# Copyright (c) 2009-2011, Aldis Berjoza <graudeejs@gmail.com>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,10 +32,7 @@
 #
 # 1}}}
 
-# repository:       http://hg.bsdroot.lv/aldis/playd.sh/
-# bug tracking:     https://bugs.bsdroot.lv/
-# feedback email:   playd@bsdroot.lv
-
+# repository:       https://github.com/graudeejs/playd
 
 readonly PLAYD_VERSION='1.22.1'
 # dependancies:

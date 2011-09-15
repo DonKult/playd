@@ -1,0 +1,25 @@
+playd is a simple mplayer wrapper written in pure /bin/sh
+
+playd controls mplayer daemon via pipe.
+
+FEATURES:
+* written in sh
+* very lightwidth
+* cli interface
+* supports playlists
+* supports all file types supported by mplayer
+* supports streaming
+* supports jumping to next, previous or any other playlist item
+* very fast
+* create/load playlists, create special playlist with favourite songs
+* display status
+* easy to learn and use
+
+REQUIREMENTS:
+* mplayer
+* /bin/sh
+* standard Unix tools sed, akw, grep, find
+* jot (some linux doesn't have it instaled by default)
+* procstat or lsof
+* tagutil (optional, needef if you want playd info to work)
+
