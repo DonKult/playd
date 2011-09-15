@@ -10,6 +10,7 @@ FEATURES:
 * supports all file types supported by mplayer
 * supports streaming
 * supports jumping to next, previous or any other playlist item
+* playlist randomization (alternative to shuffle in ordinary audio players)
 * very fast
 * create/load playlists, create special playlist with favourite songs
 * display status
