@@ -214,7 +214,7 @@ playd_randomise() {	# {{{1
 			echo "$ITEM" > "$PLAYD_HOME/rand/$I"
 			I=$(($I + 1))
 		done
-		
+
 		I=$(awk 'END { print NR }' "$1")
 
 		local J=
@@ -332,7 +332,7 @@ playd_cat_playlist() { # {{{1
 playd_longcat_playlist() { # {{{1
 	if [ -f "$PLAYD_PLAYLIST" ]; then
 		local PADDING=`awk 'END { print length(NR) }' $PLAYD_PLAYLIST`
-		playd_check 
+		playd_check
 		if [ $? -ne 0 ]; then
 			awk "/^`playd_current_file_escaped`"'$/ { printf("%0'$PADDING'd|* %s\n", NR, $0); next } { printf("%0'$PADDING'd|  %s\n", NR, $0) }' "$PLAYD_PLAYLIST"
 		else
@@ -452,7 +452,7 @@ while [ $# -gt 0 ]; do
 	'clean' )							playd_clean_playlist "$PLAYD_PLAYLIST" ;;
 	'clean-favourite' | 'cleanfav' )	playd_clean_playlist "$PLAYD_FAV_PLAYLIST" ;;
 	'edit' )							playd_edit_playlist "$PLAYD_PLAYLIST" ;;
-	'edit-favourite' | 'editfav' )		playd_edit_playlist "$PLAYD_PLAYLIST" ;;
+	'edit-favourite' | 'editfav' )		playd_edit_playlist "$PLAYD_FAV_PLAYLIST" ;;
 	'filename' | 'fname' )				playd_current_file ;;
 	'grep' )							playd_cat_playlist | egrep -i "$2"; shift ;;
 	'help' | '--help' | '-h' )			$PLAYD_HELP ;;
@@ -470,12 +470,12 @@ while [ $# -gt 0 ]; do
 	'playlist' )						NOPLAY=0; playd_put 'loadlist' "$PLAYD_PLAYLIST" $PLAYD_APPEND ;;
 	'previous' | 'prev' )				playd_put 'pt_step' -1 ;;
 	'rmlist' )							rm -f "$PLAYD_PLAYLIST" ;;
-	'rnd' | 'randomise' )				mv `playd_randomise "$PLAYD_PLAYLIST"` "$PLAYD_PLAYLIST" ;; 
+	'rnd' | 'randomise' )				mv `playd_randomise "$PLAYD_PLAYLIST"` "$PLAYD_PLAYLIST" ;;
 	'save-state' | 'save' )				playd_save_pos || playd_warn "Failed to save sate." ;;
 	'status' )							playd_check && echo 'playd is not running' || echo "playd is running. PID: $?" ;;
 	'switch-audio' | 'sw-audio' )		playd_put 'switch_audio' ;;
 	'switch-subtitles' | 'sw-subs' )	playd_put 'sub_select' ;;
-	'version')							echo "$PLAYD_NAME v$PLAYD_VERSION" ;; 
+	'version')							echo "$PLAYD_NAME v$PLAYD_VERSION" ;;
 
 	'stop' )
 		playd_save_pos
@@ -521,7 +521,7 @@ while [ $# -gt 0 ]; do
 			mv "$PLAYD_FAV_PLAYLIST.tmp" "$PLAYD_FAV_PLAYLIST"
 		fi
 		;;
-	
+
 	'play-favourites' | 'playfav' )
 		FN=`playd_randomise "$PLAYD_FAV_PLAYLIST"` \
 			&& { mv $FN "$PLAYD_PLAYLIST"; playd_put 'loadlist' "$PLAYD_PLAYLIST" 0; }
@@ -533,7 +533,7 @@ while [ $# -gt 0 ]; do
 		shift $NOVID
 		playd_start
 		;;
-	
+
 	'loop' )
 		if [ -n "$2" ]; then
 			playd_put 'loop' $2
@@ -596,7 +596,7 @@ while [ $# -gt 0 ]; do
 			playd_warn "$1 needs numeric argument. Ignoring"
 		fi
 		;;
-	
+
 	'jump' )
 		if [ -f "$PLAYD_PLAYLIST" ]; then
 			ITEM_COUNT=`awk 'END { print NR }' $PLAYD_PLAYLIST`
@@ -616,7 +616,7 @@ while [ $# -gt 0 ]; do
 		fi
 		;;
 
-	
+
 	# BUG IN THIS CODE
 	'cd' \
 	| 'dvd' )
@@ -652,7 +652,7 @@ while [ $# -gt 0 ]; do
 			playd_warn "$1 needs at least numeric argument. Ignoring"
 		fi
 		;;
-	
+
 	*'://'* )
 		playd_playlist_add "$1" ;;
 
