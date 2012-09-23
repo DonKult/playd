@@ -34,7 +34,7 @@
 
 # repository:       https://github.com/graudeejs/playd
 
-readonly PLAYD_VERSION='1.22.2'
+readonly PLAYD_VERSION='1.22.3'
 # dependancies:
 #	* mplayer	(multimedia/mplayer)
 #	* tagutil	(audio/tagutil) [Optional, needed if you want playd info]
@@ -301,7 +301,7 @@ playd_current_file() { # {{{1
 playd_current_file_escaped() { # {{{1
 	# prints current file name, that mplayer is playing.
 	# this function prepares string for awk (adds escape sequences)
-	playd_current_file | sed -e 's#[/.)(*{}+?$&^-]#\\&#g' -e 's#\[#\\\[#g' -e 's#\]#\\\]#g'
+	playd_current_file | sed -e 's#[/.)(*{}+?$&^-]#\\&#g' -e 's#\[#\\\[#g' -e 's#\]#\\\]#g' | tr -d "\n"
 } # 1}}}
 
 playd_cat_playlist() { # {{{1
