@@ -299,10 +299,11 @@ playd_current_file() { # {{{1
     playd_check
     pid=$?
     [ $pid -ne 0 ] || return
+    # XXX "head -n 1" is really bad hack to fix playd
     if [ "$OS" = 'FreeBSD' ]; then
-        procstat -f $pid | sed -n '/[0-9] v r r-------/s#.* /#/#p'
+        procstat -f $pid | sed -n '/[0-9] v r r-------/s#.* /#/#p' | head -n 1
     else
-        lsof -p $pid | sed -n '/[0-9]r  VREG /s#.* /#/#p'
+        lsof -p $pid | sed -n '/[0-9]r  VREG /s#.* /#/#p' | head -n 1
     fi
 } # 1}}}
 
