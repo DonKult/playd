@@ -89,8 +89,10 @@ readonly OS=`uname`
 case $OS in
 	'FreeBSD' )
 		ESED='sed -E'
+        FETCH="fetch"
 		;;
 	* )
+        FETCH="wget"
 		ESED='sed -r'
 		;;
 esac
@@ -653,27 +655,38 @@ while [ $# -gt 0 ]; do
 		fi
 		;;
 
-	*'://'* )
-		playd_playlist_add "$1" ;;
+    *'://'* )
+        if echo "${1##*.}" | grep -q -i -E -e "^($PLAYD_PLAYLIST_FORMATS)$" > /dev/null; then
+            URL="$1"
+            FILENAME="$TEMP/$$.`basename $1`.tmp"
+            $FETCH -o "$FILENAME" "$URL"
+            playd_playlist_addlist "$FILENAME"
+            sleep 1
+            rm -f "$FILENAME"
+        else
+            playd_playlist_add "$1"
+        fi
+        ;;
 
-	'file' | * )
-		[ "$1" = 'file' ] && shift
-		FILENAME=`playd_fullpath "$1"`
 
-		if [ -f "$FILENAME" ]; then
-			echo "${1##*.}" | grep -q -i -E -e "^(${PLAYD_FILE_FORMATS})$" \
-				&& playd_playlist_add "$FILENAME" \
-				|| { file -ib "$FILENAME" | grep -q -E -e '^(audio|video)' && playd_playlist_add "$FILENAME"; } \
-				|| { echo "${1##*.}" | grep -q -i -E -e "^($PLAYD_PLAYLIST_FORMATS)$" && playd_import "$FILENAME"; } \
-				|| playd_warn "\"$FILENAME\" doesn't seam to be valid file for playback. Ignoring" "  to override use:" "  $PLAYD_NAME nocheck $FILENAME"
-		elif [ -d "$FILENAME" ]; then
-			rm -f "$PLAYD_PLAYLIST.tmp"
-			playd_mk_playlist "$FILENAME"
-			playd_playlist_addlist "$PLAYD_PLAYLIST.tmp"
-		else
-			playd_warn "\"$FILENAME\" doesn't seam to be valid file for playback. Ignoring" '  to override use:' "  $PLAYD_NAME nocheck $FILENAME"
-		fi
-		;;
+    'file' | * )
+        [ "$1" = 'file' ] && shift
+        FILENAME=`playd_fullpath "$1"`
+
+        if [ -f "$FILENAME" ]; then
+            echo "${1##*.}" | grep -q -i -E -e "^(${PLAYD_FILE_FORMATS})$" \
+                && playd_playlist_add "$FILENAME" \
+                || { file -ib "$FILENAME" | grep -q -E -e '^(audio|video)' && playd_playlist_add "$FILENAME"; } \
+                || { echo "${1##*.}" | grep -q -i -E -e "^($PLAYD_PLAYLIST_FORMATS)$" && playd_import "$FILENAME"; } \
+                || playd_warn "\"$FILENAME\" doesn't seam to be valid file for playback. Ignoring" "  to override use:" "  $PLAYD_NAME nocheck $FILENAME"
+        elif [ -d "$FILENAME" ]; then
+            rm -f "$PLAYD_PLAYLIST.tmp"
+            playd_mk_playlist "$FILENAME"
+            playd_playlist_addlist "$PLAYD_PLAYLIST.tmp"
+        else
+            playd_warn "\"$FILENAME\" doesn't seam to be valid file for playback. Ignoring" '  to override use:' "  $PLAYD_NAME nocheck $FILENAME"
+        fi
+        ;;
 
 	esac
 
