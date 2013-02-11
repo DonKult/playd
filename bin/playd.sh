@@ -305,10 +305,18 @@ playd_current_file() { # {{{1
     pid=$?
     [ $pid -ne 0 ] || return
     # XXX "head -n 1" is really bad hack to fix playd
+    local FILE=''
     if [ "$OS" = 'FreeBSD' ]; then
-        procstat -f $pid | sed -n '/[0-9] v r r-------/s#.* /#/#p' | head -n 1
+        FILE="$(procstat -f $pid | sed -n '/[0-9] v r r-------/s#.* /#/#p' | head -n 1)"
     else
-        lsof -p $pid | sed -n '/[0-9]r[ ]\+\(VR\|R\)EG /s#.* /#/#p' | head -n 1
+        FILE="$(lsof -p $pid | sed -n '/[0-9]r[ ]\+\(VR\|R\)EG /s#.* /#/#p' | head -n 1)"
+    fi
+    # if the file is in an annex find the file linking to it to get a proper name
+    if expr match "$FILE" '^.*/\.git/annex/.*$' >/dev/null 2>&1; then
+        local DIR="$(echo "$FILE" | sed -n 's#^\(.\+\)/\.git/annex/.*$#\1#p')"
+        find -L "$DIR" -name '.git' -prune -o -samefile "$FILE" -print -quit
+    else
+        echo "$FILE"
     fi
 } # 1}}}
 
