@@ -308,7 +308,7 @@ playd_current_file() { # {{{1
     if [ "$OS" = 'FreeBSD' ]; then
         procstat -f $pid | sed -n '/[0-9] v r r-------/s#.* /#/#p' | head -n 1
     else
-        lsof -p $pid | sed -n '/[0-9]r  VREG /s#.* /#/#p' | head -n 1
+        lsof -p $pid | sed -n '/[0-9]r[ ]\+\(VR\|R\)EG /s#.* /#/#p' | head -n 1
     fi
 } # 1}}}
 
