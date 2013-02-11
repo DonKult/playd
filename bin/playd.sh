@@ -102,12 +102,17 @@ case $OS in
         ESED='sed -r'
         ;;
 esac
+playd_file_exists() { # {{{1
+    # check if the given file exists, either as real file
+    # or as a (non-broken) link
+    test -e "$1" && test -f "$1" -o -L "$1" && return 0 || return 1
+}   #1}}}
 
 playd_put() {   # {{{1
     # put argv into pipe
     case "$1" in
         'loadlist' | 'loadfile' )
-            [ -f "$2" ] \
+            playd_file_exists "$2" \
                 && PLAYD_APPEND=1 \
                 || { playd_warn "File doesn't exist:" "  $2"; return 1; }
             ;;
@@ -167,12 +172,12 @@ playd_mk_playlist() {   # {{{1
     # $1 - dir to make list
     # $1 and $fileName must be double quoted to avoid
     #   problems with filenames that contain special characters
-    if [ -f "$1" ]; then
+    if [ -d "$1" ]; then
+        find -L "$1" -name '.git' -prune -o -type f -print | grep -E -i -e "(${PLAYD_FILE_FORMATS})$" | sort >> "$PLAYD_PLAYLIST.tmp"
+    elif playd_file_exists "$1"; then
         echo "${1##*.}" | grep -q -i -E -e "^(${PLAYD_FILE_FORMATS})$" \
             && echo "$1" >> "$PLAYD_PLAYLIST.tmp" \
             || { file -ib "$1" | grep -q -E -e '^(audio|video)' && echo "$1" >> "$PLAYD_PLAYLIST.tmp"; }
-    elif [ -d "$1" ]; then
-        find "$1" -type f | grep -E -i -e "(${PLAYD_FILE_FORMATS})$" | sort >> "$PLAYD_PLAYLIST.tmp"
     else
         playd_die "What the hell: \"$1\""
     fi
@@ -189,7 +194,7 @@ playd_fullpath() {  # {{{1
 playd_playlist_add() {  # {{{1
     #add entry to playlist
     # arg1 = playlist item
-    [ -f "$1" ] || { playd_warn "File doesn't exist:" "  $1"; return 1; }
+    playd_file_exists "$1" || { playd_warn "File doesn't exist:" "  $1"; return 1; }
     [ $PLAYD_APPEND -eq 1 ] \
         && echo "$1" >> "$PLAYD_PLAYLIST" \
         || { echo "$1" > "$PLAYD_PLAYLIST"; rm -f "$PLAYD_POS"; }
@@ -199,7 +204,7 @@ playd_playlist_add() {  # {{{1
 playd_playlist_addlist() {  # {{{1
     # add list to playlist
     # arg1 = playlist item
-    [ -f "$1" ] || { playd_warn "Playlist doesn't exist:" "  $1"; return 1; }
+    test -f "$1" || { playd_warn "Playlist doesn't exist:" "  $1"; return 1; }
     [ $PLAYD_APPEND -eq 1 ] \
         && cat "$1" >> "$PLAYD_PLAYLIST" \
         || { cat "$1" > "$PLAYD_PLAYLIST"; rm -f "$PLAYD_POS"; }
@@ -243,7 +248,7 @@ playd_randomise() { # {{{1
 playd_import() {    # {{{1
     # this function will import playlists
     # arg1 filename (with full path) to playlist
-    [ -f "$1" ] || return 1
+    playd_file_exists "$1" || return 1
     case `echo "${1##*.}" | tr [A-Z] [a-z]` in
     ram )   grep -v -e '^.$' "$1" > "$PLAYD_PLAYLIST.tmp" || playd_warn "Empty playlist. Skipping" ;;
     plst )  cat "$1" > "$PLAYD_PLAYLIST.tmp" ;;
@@ -506,13 +511,13 @@ while [ $# -gt 0 ]; do
         ;;
 
     'nocheck' )
-        [ -f "$2" ] \
+        playd_file_exists "$2" \
             && { playd_playlist_add "$(playd_fullpath "$2")"; shift; } \
             || playd_warn "\"$2\" directory. Skipping"
         ;;
 
     'subtitles' | 'subs' )
-        [ -f "$2" ] \
+        playd_file_exists "$2" \
             && { playd_put 'sub_load' "$2"; shift; } \
             || playd_warn "\"$2\" isn't subtitle file. Skipping"
         ;;
@@ -680,18 +685,18 @@ while [ $# -gt 0 ]; do
         [ "$1" = 'file' ] && shift
         FILENAME=`playd_fullpath "$1"`
 
-        if [ -f "$FILENAME" ]; then
+        if [ -d "$FILENAME" ]; then
+            rm -f "$PLAYD_PLAYLIST.tmp"
+            playd_mk_playlist "$FILENAME"
+            playd_playlist_addlist "$PLAYD_PLAYLIST.tmp"
+        elif playd_file_exists "$FILENAME"; then
             echo "${1##*.}" | grep -q -i -E -e "^(${PLAYD_FILE_FORMATS})$" \
                 && playd_playlist_add "$FILENAME" \
                 || { file -ib "$FILENAME" | grep -q -E -e '^(audio|video)' && playd_playlist_add "$FILENAME"; } \
                 || { echo "${1##*.}" | grep -q -i -E -e "^($PLAYD_PLAYLIST_FORMATS)$" && playd_import "$FILENAME"; } \
                 || playd_warn "\"$FILENAME\" doesn't seam to be valid file for playback. Ignoring" "  to override use:" "  $PLAYD_NAME nocheck $FILENAME"
-        elif [ -d "$FILENAME" ]; then
-            rm -f "$PLAYD_PLAYLIST.tmp"
-            playd_mk_playlist "$FILENAME"
-            playd_playlist_addlist "$PLAYD_PLAYLIST.tmp"
         else
-            playd_warn "\"$FILENAME\" doesn't seam to be valid file for playback. Ignoring" '  to override use:' "  $PLAYD_NAME nocheck $FILENAME"
+            playd_warn "\"$FILENAME\" seams to be neither a directory not a file. Ignoring" '  to override use:' "  $PLAYD_NAME nocheck $FILENAME"
         fi
         ;;
 
