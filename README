@@ -4,7 +4,7 @@ playd controls mplayer daemon via pipe.
 
 FEATURES:
 * written in sh
-* very lightwidth
+* very lightweight
 * cli interface
 * supports playlists
 * supports all file types supported by mplayer
@@ -19,8 +19,8 @@ FEATURES:
 REQUIREMENTS:
 * mplayer
 * /bin/sh
-* standard Unix tools sed, akw, grep, find
-* jot (some linux doesn't have it instaled by default)
+* standard Unix tools sed, awk, grep, find
+* jot (some linux doesn't have it installed by default)
 * procstat or lsof
-* tagutil (optional, needef if you want playd info to work)
+* tagutil (optional, needed if you want playd info to work)
 
