@@ -22,5 +22,5 @@ REQUIREMENTS:
 * standard Unix tools sed, awk, grep, find
 * jot (some linux doesn't have it installed by default)
 * procstat or lsof
-* tagutil (optional, needed if you want playd info to work)
+* tagutil, id3info or id3v2 (optional, needed if you want playd info to work)
 

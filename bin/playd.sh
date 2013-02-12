@@ -38,6 +38,7 @@ readonly PLAYD_VERSION='1.22.3'
 # dependancies:
 #   * mplayer   (multimedia/mplayer)
 #   * tagutil   (audio/tagutil) [Optional, needed if you want playd info]
+#     supported alternatives: id3info, id3v2
 #   * jot       (Included in FreeBSD)
 
 readonly PLAYD_NAME="${0##*/}"
@@ -453,6 +454,18 @@ playd_clean_playlist() { #{{{1
     mv "$1.tmp" "$1"
 } # 1}}}
 
+playd_info() { #{{{1
+    if which tagutil >/dev/null 2>&1; then
+        tagutil "`playd_current_file`"
+    elif which id3info >/dev/null 2>&1; then
+        id3info "`playd_current_file`"
+    elif which id3v2 >/dev/null 2>&1; then
+        id3v2 -l "`playd_current_file`"
+    else
+        playd_die 'You need to install tagutil, id3info or id3v2 to use this command'
+    fi
+} # 1}}}
+
 # checking for mplayer
 [ "`which mplayer`" ] || playd_die 'mplayer not found'
 [ -d "$PLAYD_HOME" ] || { mkdir -p "$PLAYD_HOME" || playd_die "Can't create \"$PLAYD_HOME\""; }
@@ -478,7 +491,7 @@ while [ $# -gt 0 ]; do
     'filename' | 'fname' )              playd_current_file ;;
     'grep' )                            playd_cat_playlist | egrep -i "$2"; shift ;;
     'help' | '--help' | '-h' )          $PLAYD_HELP ;;
-    'info' )                            tagutil "`playd_current_file`" ;;
+    'info' )                            playd_info ;;
     'lgrep' )                           playd_longcat_playlist | egrep -i "$2"; shift ;;
     'list' )                            playd_cat_playlist | $PAGER ;;
     'list-favourites' | 'lsfav' )       $PAGER "$PLAYD_FAV_PLAYLIST" ;;
