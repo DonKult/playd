@@ -607,21 +607,17 @@ while [ $# -gt 0 ]; do
         ;;
 
     'play' )
-        if [ "$2" ]; then
-            if [ "$2" -ne 0 ]; then
-                while [ -n "$2" ]; do
-                    if [ "$2" -gt 0 ]; then
-                        playd_put 'loadfile' "`awk '{ if (NR == '$2') print $0 }' "$PLAYD_PLAYLIST"`" $PLAYD_APPEND
-                        shift
-                    else
-                        break
-                    fi
-                done
-            else
-                playd_warn "$1 needs numeric argument. Ignoring"
-            fi
+        if [ -n "$2" ]; then
+            while [ -n "$2" ]; do
+                if [ "$2" -gt 0 ]; then
+                    playd_put 'loadfile' "`awk '{ if (NR == '$2') print $0 }' "$PLAYD_PLAYLIST"`" $PLAYD_APPEND
+                else
+                    playd_warn "$1 needs a numeric argument, but it got '$2'. Ignoring"
+                fi
+                shift
+            done
         else
-            playd_warn "$1 needs numeric argument. Ignoring"
+            playd_warn "$1 needs at least one numeric argument. Ignoring"
         fi
         ;;
 
