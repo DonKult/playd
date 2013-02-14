@@ -111,17 +111,23 @@ playd_file_exists() { # {{{1
 
 playd_put() {   # {{{1
     # put argv into pipe
+    if [ "$1" = 'quit' ]; then
+        playd_check || echo "$@" >> "$PLAYD_PIPE"
+        return 0
+    fi
+
+    if playd_check; then playd_start; fi
+
     case "$1" in
         'loadlist' | 'loadfile' )
-            playd_file_exists "$2" \
-                && PLAYD_APPEND=1 \
+            playd_file_exists "$2" && PLAYD_APPEND=1 \
                 || { playd_warn "File doesn't exist:" "  $2"; return 1; }
+            printf "%s '%s' %d\n" "$1" "$(echo "$2" | sed -e "s#'#\\\'#g")" "$3" >> "$PLAYD_PIPE"
             ;;
+        *)
+            echo "$@" >> "$PLAYD_PIPE"
     esac
 
-    playd_check \
-        && { [ "$1" != 'quit' ] && { playd_start; echo "$*" >> "$PLAYD_PIPE"; }; } \
-        || echo "$*" >> "$PLAYD_PIPE"
     return 0
 }   # 1}}}
 
