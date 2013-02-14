@@ -67,6 +67,11 @@ playd_die() {   # {{{1
 
 readonly PLAYD_HOME="${XDG_CONFIG_HOME:-"$HOME/.config"}/playd"
 
+# on Debian alike systems a better default than more exists
+if which sensible-pager >/dev/null 2>&1; then
+    PAGER='sensible-pager'
+fi
+
 # users config file
 [ -f "$PLAYD_HOME/playd.conf" ] && . "$PLAYD_HOME/playd.conf"
 
@@ -445,6 +450,10 @@ Exit() { # {{{1
 
 playd_edit_playlist() { # {{{1
     # arg1 playlist to edit
+    # on Debian alike systems a better default(!) than vi exists
+    if which sensible-editor >/dev/null 2>&1; then
+        EDITOR='sensible-editor'
+    fi
     ${EDITOR:-vi} "$1"
     playd_clean_playlist "$1"
     # TODO: add checks
