@@ -39,7 +39,7 @@ readonly PLAYD_VERSION='1.22.3'
 #   * mplayer   (multimedia/mplayer)
 #   * tagutil   (audio/tagutil) [Optional, needed if you want playd info]
 #     supported alternatives: id3info, id3v2
-#   * jot       (Included in FreeBSD)
+#   * jot       (Included in FreeBSD) or shuf (included in GNU coreutils)
 
 readonly PLAYD_NAME="${0##*/}"
 readonly PLAYD_FILE_FORMATS='mp3|flac|og[agxmv]|wv|aac|mp[421a]|wav|aif[cf]?|m4[abpr]|ape|mk[av]|avi|mpf|vob|di?vx|mpga?|mov|flv|3gp|wm[av]|(m2)?ts|ac3'
@@ -227,8 +227,13 @@ playd_randomise() { # {{{1
     # this function will randomise default playlist
     # arg1 = list to randomize
     # at the end echos new list name
-    if [ -f "$1" ]; then
-        local LIST=`echo "$1" | sed 's#^.*/##'`
+    local LIST=`echo "$1" | sed 's#^.*/##'`
+    if [ ! -f "$1" ]; then
+        playd_warn "File doesn't exist:" "$1"
+        return 1
+    elif which shuf >/dev/null 2>&1; then
+        shuf "$1" -o "${PLAYD_HOME}/${LIST}.tmp"
+    elif which jot >/dev/null 2>&1; then
         rm -f "$PLAYD_HOME/$LIST.tmp"
         [ ! -d "$PLAYD_HOME/rand" ] \
             && mkdir "$PLAYD_HOME/rand" \
@@ -250,11 +255,9 @@ playd_randomise() { # {{{1
             mv "$PLAYD_HOME/rand/$J" "$PLAYD_HOME/rand/$ID" 2> /dev/null > /dev/null
         done
         rm -Rf "$PLAYD_HOME/rand"/*
-        echo "$PLAYD_HOME/$LIST.tmp"
-        return 0
     fi
-    playd_warn "File doesn't exist:" "$1"
-    return 1
+    echo "$PLAYD_HOME/$LIST.tmp"
+    return 0
 }   # 1}}}
 
 playd_import() {    # {{{1
@@ -388,8 +391,7 @@ playd_ls() { # {{{1
         local ITEMS=`awk 'END { print NR }' $PLAYD_PLAYLIST`
         playd_check
         if [ $? -ne 0 ]; then
-            local CURRENT_FILE="`playd_current_file_escaped`"
-            local POS=`awk 'BEGIN { showed=0 }; /'"$CURRENT_FILE"'/ && showed == 0 { print NR; showed = 1 }' "$PLAYD_PLAYLIST"`
+            local POS="$(playd_get_pos)"
             local POS_MARKER="*"
         else
             if [ -f "$PLAYD_POS" ]; then
@@ -430,17 +432,31 @@ NR >= '$(($POS-$LS_PRE_POS))' && NR <= '$(($POS+$LS_POST_POS))' {
     fi
 } # }}}
 
-playd_save_pos() { # {{{1
-    playd_check || {
-        if [ -f "$PLAYD_PLAYLIST" ]; then
-            CURRENT_SONG=`playd_current_file_escaped`
-            if [ "$CURRENT_SONG" != '' ]; then
-                awk 'BEGIN { printed=0 }; /'"$CURRENT_SONG"'/ && printed == 0 { print NR; printed=1 }' "$PLAYD_PLAYLIST" > "$PLAYD_POS"
-                return 0
+playd_get_pos() { # {{{1
+    if [ -f "$PLAYD_PLAYLIST" ]; then
+        local CURRENT_SONG="$1"
+        if [ -z "$1" ]; then
+            if playd_check; then
+                return 1;
             fi
+            CURRENT_SONG="`playd_current_file_escaped`"
         fi
-        return 1
-    }
+        if [ -n "$CURRENT_SONG" ]; then
+            awk 'BEGIN { printed=0 }; /'"$CURRENT_SONG"'/ && printed == 0 { print NR; printed=1 }' "$PLAYD_PLAYLIST"
+            return 0
+        fi
+    fi
+    return 1
+} # 1}}}
+
+playd_save_pos() { # {{{1
+    local NUMBER="$(playd_get_pos)"
+    # split into two tests as otherwise we get an "Illegal number:" on empty NUMBER
+    if [ -n "$NUMBER" ] && [ "$NUMBER" -gt 1 ]; then
+        echo "$NUMBER" > "$PLAYD_POS"
+        return 0
+    fi
+    return 1
 } # 1}}}
 
 Exit() { # {{{1
@@ -607,7 +623,7 @@ while [ $# -gt 0 ]; do
             playd_put 'pausing_keep_force loadlist' "$PLAYD_PLAYLIST" 0
             if [ -f "$PLAYD_POS" ]; then
                 POS=`cat "$PLAYD_POS"`
-                [ "$POS" -gt 1 ] && playd_put 'pausing_keep_force pt_step' $(($POS - 1))
+                [ -n "$POS" -a "$POS" -gt 1 ] && playd_put 'pausing_keep_force pt_step' $(($POS - 1))
             fi
             playd_put 'pause'
         else
@@ -649,7 +665,13 @@ while [ $# -gt 0 ]; do
             ITEM_COUNT=`awk 'END { print NR }' $PLAYD_PLAYLIST`
             PLAYD_APPEND=0
             NUMBER=$2
-            [ "$2" = 'rnd' -o "$2" = 'random' ] && NUMBER=`jot -r 1 0 $ITEM_COUNT`
+            if [ "$2" = 'rnd' -o "$2" = 'random' ]; then
+                if which jot >/dev/null 2>&1; then
+                    NUMBER=`jot -r 1 0 $ITEM_COUNT`
+                elif which shuf >/dev/null 2>&1; then
+                    NUMBER="$(playd_get_pos "$(shuf "$PLAYD_PLAYLIST" -n 1)")"
+                fi
+            fi
             if [ $NUMBER -gt 0 -a $NUMBER -le $ITEM_COUNT ]; then
                 awk 'NR >= '"$NUMBER"' { print $0 }' "$PLAYD_PLAYLIST"  > "$PLAYD_PLAYLIST.tmp"
                 awk 'NR < '"$NUMBER"' { print $0 }' "$PLAYD_PLAYLIST"  >> "$PLAYD_PLAYLIST.tmp"
