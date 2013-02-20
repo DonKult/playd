@@ -123,7 +123,7 @@ playd_put() {   # {{{1
 
     if playd_check; then playd_start; fi
 
-    case "$1" in
+    case "$(echo "$1" | cut -d' ' -f 2)" in
         'loadlist' | 'loadfile' )
             playd_file_exists "$2" && PLAYD_APPEND=1 \
                 || { playd_warn "File doesn't exist:" "  $2"; return 1; }
@@ -603,12 +603,13 @@ while [ $# -gt 0 ]; do
         shift $NOVID
         playd_start
         if [ -f "$PLAYD_PLAYLIST" ]; then
-            playd_put 'loadlist' "$PLAYD_PLAYLIST" 0
+            playd_put 'set_property' 'pause' '1'
+            playd_put 'pausing_keep_force loadlist' "$PLAYD_PLAYLIST" 0
             if [ -f "$PLAYD_POS" ]; then
                 POS=`cat "$PLAYD_POS"`
-                sleep 1
-                [ "$POS" -gt 1 ] && playd_put 'pt_step' $(($POS - 1))
+                [ "$POS" -gt 1 ] && playd_put 'pausing_keep_force pt_step' $(($POS - 1))
             fi
+            playd_put 'pause'
         else
             playd_warn "Default playlist doesn't exist"
             rm -f "$PLAYD_POS"
