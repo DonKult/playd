@@ -464,8 +464,8 @@ playd_clean_playlist() { #{{{1
     # arg1 - playlist to clean
     rm -f "$1.tmp"
     cat "$1" | while read item; do
-        [ -r "$item" ] && echo "$item" >> "$1.tmp"
-    done
+        [ -r "$item" ] && echo "$item"
+    done > "$1.tmp"
     mv "$1.tmp" "$1"
 } # 1}}}
 
