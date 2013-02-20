@@ -156,8 +156,21 @@ playd_start() { # {{{1
             && local MPLAYER_RUN_CMD="$MPLAYER_CMD" \
             || local MPLAYER_RUN_CMD="$MPLAYER_SND_ONLY_CMD"
 
-        { exec $MPLAYER_RUN_CMD > /dev/null 2> /dev/null & } \
-            || playd_die 'Failed to start mplayer'
+        $MPLAYER_RUN_CMD > /dev/null 2> /dev/null &
+        MPLAYER_PID="$!"
+        if [ -n "$MPLAYER_PID" ]; then
+            # wait up to 5 seconds for the fork to be 'ready'
+            for i in $(seq 1 5); do
+                if [ "$(ps -p $MPLAYER_PID -o comm --no-headers)" = 'mplayer' ]; then
+                    break;
+                fi
+                sleep 1
+            done
+        fi
+        if [ -z "$MPLAYER_PID" -o "$(ps -p $MPLAYER_PID -o comm --no-headers)" != 'mplayer' ]; then
+            playd_die 'Failed to start mplayer'
+        fi
+
         cd - > /dev/null 2> /dev/null
     }
 }   # 1}}}
